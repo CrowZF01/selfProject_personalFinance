@@ -1,0 +1,6 @@
+# Image reference folder (design mockups)
+img/
+
+# OS generated files
+.DS_Store
+Thumbs.db
