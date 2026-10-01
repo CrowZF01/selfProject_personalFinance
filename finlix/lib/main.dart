@@ -13,7 +13,7 @@ class FinlixApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Finlix',
+      title: 'FinLix',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const MainScreen(),
