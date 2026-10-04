@@ -1,11 +1,73 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../core/data/default_categories.dart';
+import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/transaction_model.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => DashboardScreenState();
+}
+
+class DashboardScreenState extends State<DashboardScreen> {
+  List<TransactionModel> _transactions = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await DbHelper.instance.getAllTransactions();
+      if (mounted) {
+        setState(() {
+          _transactions = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  // Format currency
+  String _formatAmount(double amount) {
+    final formatter = NumberFormat('#,##0.##', 'en_US');
+    return formatter.format(amount);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    double totalIncome = 0;
+    double totalExpense = 0;
+    for (var tx in _transactions) {
+      if (tx.type == TransactionType.income) {
+        totalIncome += tx.amount;
+      } else {
+        totalExpense += tx.amount;
+      }
+    }
+    final double balance = totalIncome - totalExpense;
+
+    // Group transactions by Date String (e.g. '16 Sept Wednesday')
+    final Map<String, List<TransactionModel>> grouped = {};
+    for (var tx in _transactions) {
+      final dateKey = DateFormat('d MMM EEEE').format(tx.date);
+      if (!grouped.containsKey(dateKey)) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey]!.add(tx);
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -18,6 +80,8 @@ class DashboardScreen extends StatelessWidget {
         ),
         title: const Text(
           'Money Tracker',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: AppColors.onSurface,
             fontSize: 20,
@@ -26,8 +90,8 @@ class DashboardScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_month_outlined, color: AppColors.onSurface, size: 24),
-            onPressed: () {},
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.onSurface, size: 24),
+            onPressed: loadData,
           ),
           Padding(
             padding: const EdgeInsets.only(right: 16.0, left: 4.0),
@@ -47,146 +111,125 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Monthly Summary Card
-              _buildMonthlySummaryCard(),
-              const SizedBox(height: 18),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          : RefreshIndicator(
+              onRefresh: loadData,
+              color: AppColors.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Monthly Summary Card
+                      _buildMonthlySummaryCard(
+                        expenses: _formatAmount(totalExpense),
+                        income: _formatAmount(totalIncome),
+                        balance: _formatAmount(balance),
+                      ),
+                      const SizedBox(height: 18),
 
-              // Group 1: 16 Sept Wednesday
-              _buildDateSection(
-                dateTitle: '16 Sept Wednesday',
-                expensesText: '66,000',
-                incomeText: null,
-                items: [
-                  _TransactionItemData(
-                    title: 'Beli Roti for BW',
-                    amount: '-66,000',
-                    isExpense: true,
-                    icon: Icons.bakery_dining_rounded,
-                    iconBgColor: AppColors.pastelPeach,
-                    iconColor: AppColors.iconPeach,
+                      if (_transactions.isEmpty)
+                        _buildEmptyState()
+                      else
+                        ...grouped.entries.map((entry) {
+                          double groupExpense = 0;
+                          double groupIncome = 0;
+                          for (var item in entry.value) {
+                            if (item.type == TransactionType.expense) {
+                              groupExpense += item.amount;
+                            } else {
+                              groupIncome += item.amount;
+                            }
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: _buildDateSection(
+                              dateTitle: entry.key,
+                              expensesText: groupExpense > 0 ? _formatAmount(groupExpense) : '0',
+                              incomeText: groupIncome > 0 ? _formatAmount(groupIncome) : null,
+                              items: entry.value,
+                            ),
+                          );
+                        }),
+
+                      // Bottom padding to avoid overlapping floating nav bar
+                      const SizedBox(height: 90),
+                    ],
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 16),
+            ),
+    );
+  }
 
-              // Group 2: 13 Sept Sunday
-              _buildDateSection(
-                dateTitle: '13 Sept Sunday',
-                expensesText: '30,000',
-                incomeText: '22,000',
-                items: [
-                  _TransactionItemData(
-                    title: 'gemini',
-                    amount: '-15,000',
-                    isExpense: true,
-                    icon: Icons.school_outlined,
-                    iconBgColor: AppColors.pastelOrange,
-                    iconColor: AppColors.iconPeach,
-                  ),
-                  _TransactionItemData(
-                    title: 'free',
-                    amount: '22,000',
-                    isExpense: false,
-                    icon: Icons.savings_outlined,
-                    iconBgColor: AppColors.pastelPurple,
-                    iconColor: AppColors.iconPurple,
-                  ),
-                  _TransactionItemData(
-                    title: 'Matcha Latte USDA',
-                    amount: '-15,000',
-                    isExpense: true,
-                    icon: Icons.coffee_outlined,
-                    iconBgColor: AppColors.pastelMint,
-                    iconColor: AppColors.iconMint,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Group 3: 8 Sept Tuesday
-              _buildDateSection(
-                dateTitle: '8 Sept Tuesday',
-                expensesText: '38,500',
-                incomeText: null,
-                items: [
-                  _TransactionItemData(
-                    title: 'Dawet',
-                    amount: '-6,000',
-                    isExpense: true,
-                    icon: Icons.restaurant_rounded,
-                    iconBgColor: AppColors.pastelMint,
-                    iconColor: AppColors.iconMint,
-                  ),
-                  _TransactionItemData(
-                    title: 'Bensin',
-                    amount: '-15,000',
-                    isExpense: true,
-                    icon: Icons.local_gas_station_rounded,
-                    iconBgColor: AppColors.pastelPeach,
-                    iconColor: AppColors.iconPeach,
-                  ),
-                  _TransactionItemData(
-                    title: 'Basreng USDA',
-                    amount: '-17,500',
-                    isExpense: true,
-                    icon: Icons.lunch_dining_rounded,
-                    iconBgColor: AppColors.pastelMint,
-                    iconColor: AppColors.iconMint,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Group 4: 4 Sept Friday
-              _buildDateSection(
-                dateTitle: '4 Sept Friday',
-                expensesText: '320,000',
-                incomeText: '940,000',
-                items: [
-                  _TransactionItemData(
-                    title: 'Kuota',
-                    amount: '-150,000',
-                    isExpense: true,
-                    icon: Icons.phone_android_rounded,
-                    iconBgColor: AppColors.pastelPeach,
-                    iconColor: AppColors.iconPeach,
-                  ),
-                  _TransactionItemData(
-                    title: 'Anker Charger',
-                    amount: '-170,000',
-                    isExpense: true,
-                    icon: Icons.shopping_cart_outlined,
-                    iconBgColor: AppColors.pastelPurple,
-                    iconColor: AppColors.iconPurple,
-                  ),
-                  _TransactionItemData(
-                    title: 'Asdos',
-                    amount: '440,000',
-                    isExpense: false,
-                    icon: Icons.payments_outlined,
-                    iconBgColor: AppColors.pastelMint,
-                    iconColor: AppColors.iconMint,
-                  ),
-                ],
-              ),
-
-              // Bottom padding to avoid overlapping floating nav bar
-              const SizedBox(height: 90),
-            ],
-          ),
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+      margin: const EdgeInsets.only(top: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF1E8),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.borderSubtle,
+          width: 1.2,
         ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFDED4),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.receipt_long_outlined,
+              size: 38,
+              color: Color(0xFF8E4C3B),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Belum ada transaksi',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Tekan tombol + di bawah untuk mencatat pengeluaran atau pemasukan baru Anda.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF757575),
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMonthlySummaryCard() {
+  Widget _buildMonthlySummaryCard({
+    required String expenses,
+    required String income,
+    required String balance,
+  }) {
+    final now = DateTime.now();
+    final yearStr = DateFormat('yyyy').format(now);
+    final monthStr = DateFormat('MMM').format(now);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -214,9 +257,9 @@ class DashboardScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
-                  '2026',
-                  style: TextStyle(
+                Text(
+                  yearStr,
+                  style: const TextStyle(
                     fontSize: 9.5,
                     color: Color(0xFF757575),
                     fontWeight: FontWeight.w500,
@@ -224,17 +267,17 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Text(
-                      'Sept',
-                      style: TextStyle(
+                      monthStr,
+                      style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
                       ),
                     ),
-                    SizedBox(width: 2),
-                    Icon(
+                    const SizedBox(width: 2),
+                    const Icon(
                       Icons.keyboard_arrow_down_rounded,
                       size: 14,
                       color: AppColors.onSurface,
@@ -250,7 +293,7 @@ class DashboardScreen extends StatelessWidget {
           Expanded(
             child: _buildSummaryColumn(
               label: 'Expenses',
-              value: '454,500',
+              value: expenses,
               valueColor: AppColors.expense,
             ),
           ),
@@ -260,7 +303,7 @@ class DashboardScreen extends StatelessWidget {
           Expanded(
             child: _buildSummaryColumn(
               label: 'Income',
-              value: '962,000',
+              value: income,
               valueColor: AppColors.income,
             ),
           ),
@@ -270,7 +313,7 @@ class DashboardScreen extends StatelessWidget {
           Expanded(
             child: _buildSummaryColumn(
               label: 'Balance',
-              value: '507,500',
+              value: balance,
               valueColor: AppColors.onSurface,
             ),
           ),
@@ -324,7 +367,7 @@ class DashboardScreen extends StatelessWidget {
     required String dateTitle,
     required String expensesText,
     String? incomeText,
-    required List<_TransactionItemData> items,
+    required List<TransactionModel> items,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,68 +474,92 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionTile(_TransactionItemData item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 11.0),
-      child: Row(
-        children: [
-          // Circle Icon Badge
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: item.iconBgColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              item.icon,
-              color: item.iconColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
+  Widget _buildTransactionTile(TransactionModel tx) {
+    final cat = DefaultCategories.byId(tx.categoryId);
+    final icon = cat?.icon ?? Icons.category_rounded;
+    final iconColor = cat?.color ?? const Color(0xFF8E4C3B);
+    final iconBgColor = (cat != null)
+        ? cat.color.withOpacity(0.18)
+        : const Color(0xFFFFDED4);
+    final bool isExpense = tx.type == TransactionType.expense;
 
-          // Title
-          Expanded(
-            child: Text(
-              item.title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.onSurface,
+    final formattedAmt = (isExpense ? '-' : '') + _formatAmount(tx.amount);
+
+    return Dismissible(
+      key: ValueKey(tx.id ?? tx.date.millisecondsSinceEpoch),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFD4DF),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFBD382B)),
+      ),
+      onDismissed: (_) async {
+        if (tx.id != null) {
+          await DbHelper.instance.deleteTransaction(tx.id!);
+          loadData();
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 11.0),
+        child: Row(
+          children: [
+            // Circle Icon Badge
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 20,
               ),
             ),
-          ),
+            const SizedBox(width: 14),
 
-          // Amount
-          Text(
-            item.amount,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: item.isExpense ? AppColors.expense : AppColors.income,
+            // Title / Note
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tx.title.isNotEmpty ? tx.title : (cat?.name ?? 'Transaction'),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  if (tx.note != null && tx.note!.isNotEmpty && tx.note != tx.title)
+                    Text(
+                      tx.note!,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF8E9A92),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // Amount
+            Text(
+              formattedAmt,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isExpense ? AppColors.expense : AppColors.income,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
-
-class _TransactionItemData {
-  final String title;
-  final String amount;
-  final bool isExpense;
-  final IconData icon;
-  final Color iconBgColor;
-  final Color iconColor;
-
-  _TransactionItemData({
-    required this.title,
-    required this.amount,
-    required this.isExpense,
-    required this.icon,
-    required this.iconBgColor,
-    required this.iconColor,
-  });
 }

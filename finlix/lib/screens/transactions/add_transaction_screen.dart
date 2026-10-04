@@ -55,36 +55,60 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     });
   }
 
-    /// Save the transaction to SQLite and close the screen.
+  bool _isSaving = false;
+
+  /// Save the transaction to SQLite and close the screen.
   Future<void> _saveTransaction() async {
-    // Basic validation
-    if (_amount.isEmpty || _amount == '0') {
+    if (_isSaving) return;
+
+    final parsedAmount = double.tryParse(_amount.replaceAll(',', ''));
+    if (parsedAmount == null || parsedAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Masukkan jumlah uang')),
+        const SnackBar(content: Text('Masukkan nominal uang yang valid')),
       );
       return;
     }
 
-    // Resolve selected category id (fallback if missing)
-    final selectedCat = _categories[_selectedCategoryIndex];
-    final catId = selectedCat['id'] as String? ?? 'cat_unknown';
+    setState(() => _isSaving = true);
 
-    // Build TransactionModel
-    final tx = TransactionModel(
-      title: _note,
-      amount: double.parse(_amount.replaceAll(',', '')),
-      type: _isExpense ? TransactionType.expense : TransactionType.income,
-      categoryId: catId,
-      date: DateTime.now(),
-      note: _note,
-    );
+    try {
+      final selectedCat = _categories[_selectedCategoryIndex];
+      final catId = selectedCat['id'] as String? ?? 'cat_unknown';
 
-    await DbHelper.instance.insertTransaction(tx);
+      final tx = TransactionModel(
+        title: _note.isNotEmpty ? _note : (selectedCat['label'] as String? ?? 'Transaction'),
+        amount: parsedAmount,
+        type: _isExpense ? TransactionType.expense : TransactionType.income,
+        categoryId: catId,
+        date: DateTime.now(),
+        note: _note,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Transaksi tersimpan')),
-    );
-    Navigator.pop(context, true); // return true to signal refresh
+      await DbHelper.instance.insertTransaction(tx);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Transaksi berhasil disimpan!'),
+            backgroundColor: Color(0xFF00583A),
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menyimpan: $e'),
+            backgroundColor: const Color(0xFFBD382B),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
 @override
@@ -612,22 +636,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(
-                            Icons.check_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Save',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+                        children: _isSaving
+                            ? const [
+                                SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.2,
+                                  ),
+                                ),
+                              ]
+                            : const [
+                                Icon(
+                                  Icons.check_rounded,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Save',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                       ),
                     ),
                   ),

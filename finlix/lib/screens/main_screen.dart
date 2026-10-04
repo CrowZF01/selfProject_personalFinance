@@ -15,12 +15,13 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey<DashboardScreenState>();
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    AnalyticsScreen(),
-    SavingsScreen(),
-    ProfileScreen(),
+  late final List<Widget> _screens = [
+    DashboardScreen(key: _dashboardKey),
+    const AnalyticsScreen(),
+    const SavingsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -38,13 +39,17 @@ class _MainScreenState extends State<MainScreen> {
             _currentIndex = index;
           });
         },
-        onAddTap: () {
-          Navigator.push(
+        onAddTap: () async {
+          final result = await Navigator.push<bool>(
             context,
             MaterialPageRoute(
               builder: (context) => const AddTransactionScreen(),
             ),
           );
+
+          if (result == true) {
+            _dashboardKey.currentState?.loadData();
+          }
         },
       ),
     );
