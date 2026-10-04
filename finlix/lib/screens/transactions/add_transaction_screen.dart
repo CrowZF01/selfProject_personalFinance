@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/data/default_categories.dart';
+import '../../core/database/db_helper.dart';
+import '../../models/transaction_model.dart';
+
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -14,32 +18,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String _note = 'Coffee & Snacks';
   int _selectedCategoryIndex = 0;
 
-  final List<Map<String, dynamic>> _categories = [
-    {
-      'label': 'Coffee',
-      'icon': Icons.local_cafe_rounded,
-      'color': const Color(0xFF8E4C3B),
-      'bgColor': const Color(0xFFFFDED4),
-    },
-    {
-      'label': 'Food',
-      'icon': Icons.lunch_dining_rounded,
-      'color': const Color(0xFFD97706),
-      'bgColor': const Color(0xFFFEF3C7),
-    },
-    {
-      'label': 'Groceries',
-      'icon': Icons.shopping_cart_outlined,
-      'color': const Color(0xFF006C49),
-      'bgColor': const Color(0xFFD4EFE1),
-    },
-    {
-      'label': 'Transport',
-      'icon': Icons.directions_car_rounded,
-      'color': const Color(0xFF6366F1),
-      'bgColor': const Color(0xFFE4E0FF),
-    },
-  ];
+    final List<Map<String, dynamic>> _categories = DefaultCategories.expenseCategories
+        .map((c) => {
+          'id': c.id,
+          'label': c.name,
+          'icon': c.icon,
+          'color': c.color,
+          'bgColor': const Color(0xFFFFDED4), // placeholder pastel background
+        })
+        .toList();
 
   void _onKeyPress(String val) {
     setState(() {
@@ -68,7 +55,39 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     });
   }
 
-  @override
+    /// Save the transaction to SQLite and close the screen.
+  Future<void> _saveTransaction() async {
+    // Basic validation
+    if (_amount.isEmpty || _amount == '0') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukkan jumlah uang')),
+      );
+      return;
+    }
+
+    // Resolve selected category id (fallback if missing)
+    final selectedCat = _categories[_selectedCategoryIndex];
+    final catId = selectedCat['id'] as String? ?? 'cat_unknown';
+
+    // Build TransactionModel
+    final tx = TransactionModel(
+      title: _note,
+      amount: double.parse(_amount.replaceAll(',', '')),
+      type: _isExpense ? TransactionType.expense : TransactionType.income,
+      categoryId: catId,
+      date: DateTime.now(),
+      note: _note,
+    );
+
+    await DbHelper.instance.insertTransaction(tx);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Transaksi tersimpan')),
+    );
+    Navigator.pop(context, true); // return true to signal refresh
+  }
+
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -575,8 +594,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 3.0),
                   child: GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
+                    onTap: () async {
+                      await _saveTransaction();
                     },
                     child: Container(
                       height: 98,

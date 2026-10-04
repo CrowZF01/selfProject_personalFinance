@@ -65,6 +65,12 @@ class DbHelper {
     return result.map((json) => TransactionModel.fromMap(json)).toList();
   }
 
+  // Delete a transaction by its id.
+  Future<int> deleteTransaction(int id) async {
+    final db = await instance.database;
+    return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+  }
+
   // --- Savings Goals CRUD ---
   Future<int> insertSavingsGoal(SavingsGoalModel goal) async {
     final db = await instance.database;
