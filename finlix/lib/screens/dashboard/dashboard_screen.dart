@@ -39,9 +39,9 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // Format currency
+  // Format currency with 2 decimal places
   String _formatAmount(double amount) {
-    final formatter = NumberFormat('#,##0.##', 'en_US');
+    final formatter = NumberFormat('#,##0.00', 'en_US');
     return formatter.format(amount);
   }
 

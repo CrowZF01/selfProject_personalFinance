@@ -15,18 +15,25 @@ class AddTransactionScreen extends StatefulWidget {
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   bool _isExpense = true;
   String _amount = '18.50';
-  String _note = 'Coffee & Snacks';
+  String _note = 'Coffee';
   int _selectedCategoryIndex = 0;
 
-    final List<Map<String, dynamic>> _categories = DefaultCategories.expenseCategories
+  List<Map<String, dynamic>> get _categories {
+    final list = _isExpense
+        ? DefaultCategories.expenseCategories
+        : DefaultCategories.incomeCategories;
+    return list
         .map((c) => {
-          'id': c.id,
-          'label': c.name,
-          'icon': c.icon,
-          'color': c.color,
-          'bgColor': const Color(0xFFFFDED4), // placeholder pastel background
-        })
+              'id': c.id,
+              'label': c.name,
+              'icon': c.icon,
+              'color': c.color,
+              'bgColor': _isExpense
+                  ? const Color(0xFFFFDED4)
+                  : const Color(0xFFD4EFE1),
+            })
         .toList();
+  }
 
   void _onKeyPress(String val) {
     setState(() {
@@ -43,9 +50,29 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         }
       } else if (val == '00') {
         if (_amount != '0') {
-          _amount = '$_amount 00'.replaceAll(' ', '');
+          if (_amount.contains('.')) {
+            final parts = _amount.split('.');
+            if (parts.length > 1 && parts[1].length < 2) {
+              final needed = 2 - parts[1].length;
+              if (needed == 2) {
+                _amount = '${_amount}00';
+              } else if (needed == 1) {
+                _amount = '${_amount}0';
+              }
+            }
+          } else {
+            _amount = '${_amount}00';
+          }
         }
       } else {
+        // Number key (0-9)
+        if (_amount.contains('.')) {
+          final parts = _amount.split('.');
+          if (parts.length > 1 && parts[1].length >= 2) {
+            // Already has 2 decimal digits, prevent extra digits
+            return;
+          }
+        }
         if (_amount == '0') {
           _amount = val;
         } else {
@@ -53,6 +80,58 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         }
       }
     });
+  }
+
+  void _showEditNoteDialog() {
+    final controller = TextEditingController(text: _note);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Edit Note / Description',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Enter description...',
+            filled: true,
+            fillColor: const Color(0xFFFAF1E8),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.borderSubtle),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF757575))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00583A),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              setState(() {
+                final text = controller.text.trim();
+                _note = text.isNotEmpty ? text : _categories[_selectedCategoryIndex]['label'];
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   bool _isSaving = false;
@@ -275,7 +354,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           // Expense Button
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _isExpense = true),
+              onTap: () {
+                setState(() {
+                  _isExpense = true;
+                  _selectedCategoryIndex = 0;
+                  _note = DefaultCategories.expenseCategories.first.name;
+                });
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 9),
                 decoration: BoxDecoration(
@@ -311,7 +396,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           // Income Button
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _isExpense = false),
+              onTap: () {
+                setState(() {
+                  _isExpense = false;
+                  _selectedCategoryIndex = 0;
+                  _note = DefaultCategories.incomeCategories.first.name;
+                });
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 9),
                 decoration: BoxDecoration(
@@ -453,36 +544,45 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Note / Description Pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFFE2CFC2),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.edit_note_rounded,
-                  size: 18,
-                  color: Color(0xFF757575),
+          // Note / Description Pill (Tappable to Edit)
+          InkWell(
+            onTap: _showEditNoteDialog,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFE2CFC2),
+                  width: 1,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _note,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurface,
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.edit_note_rounded,
+                    size: 18,
+                    color: Color(0xFF757575),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _note,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onSurface,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const Icon(
+                    Icons.edit_outlined,
+                    size: 14,
+                    color: Color(0xFF9E9E9E),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -501,15 +601,24 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: GestureDetector(
-              onTap: () => setState(() => _selectedCategoryIndex = index),
+              onTap: () {
+                setState(() {
+                  _selectedCategoryIndex = index;
+                  _note = cat['label'] as String;
+                });
+              },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFFFDED4) : const Color(0xFFFAF1E8),
+                  color: isSelected
+                      ? (_isExpense ? const Color(0xFFFFDED4) : const Color(0xFFD4EFE1))
+                      : const Color(0xFFFAF1E8),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFFF0C8BC) : const Color(0xFFF0DDD0),
+                    color: isSelected
+                        ? (_isExpense ? const Color(0xFFF0C8BC) : const Color(0xFF9FE1C3))
+                        : const Color(0xFFF0DDD0),
                     width: 1.2,
                   ),
                 ),
@@ -527,7 +636,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                        color: isSelected ? const Color(0xFF8E4C3B) : AppColors.onSurface,
+                        color: isSelected
+                            ? (_isExpense ? const Color(0xFF8E4C3B) : const Color(0xFF006C49))
+                            : AppColors.onSurface,
                       ),
                     ),
                   ],
