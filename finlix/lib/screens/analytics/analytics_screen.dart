@@ -1,11 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/transaction_model.dart';
 
-class AnalyticsScreen extends StatelessWidget {
+class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
 
   @override
+  State<AnalyticsScreen> createState() => AnalyticsScreenState();
+}
+
+class AnalyticsScreenState extends State<AnalyticsScreen> {
+  DateTime _selectedMonth = DateTime.now();
+  List<TransactionModel> _allTransactions = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  /// Memuat semua transaksi dari SQLite
+  Future<void> loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await DbHelper.instance.getAllTransactions();
+      if (mounted) {
+        setState(() {
+          _allTransactions = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// Pindah ke bulan sebelumnya
+  void _prevMonth() {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+    });
+  }
+
+  /// Pindah ke bulan berikutnya
+  void _nextMonth() {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+    });
+  }
+
+  String _formatAmount(double amount) {
+    final formatter = NumberFormat('#,##0.00', 'en_US');
+    return formatter.format(amount);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Filter transaksi berdasarkan bulan & tahun yang dipilih
+    final monthlyTransactions = _allTransactions.where((tx) {
+      return tx.date.year == _selectedMonth.year && tx.date.month == _selectedMonth.month;
+    }).toList();
+
+    // Hitung total pengeluaran & pemasukan bulan ini
+    double totalExpense = 0;
+    double totalIncome = 0;
+    for (var tx in monthlyTransactions) {
+      if (tx.type == TransactionType.expense) {
+        totalExpense += tx.amount;
+      } else {
+        totalIncome += tx.amount;
+      }
+    }
+
+    final hasExpenses = totalExpense > 0;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -60,6 +133,13 @@ class AnalyticsScreen extends StatelessWidget {
           ],
         ),
         actions: [
+          // Tombol Refresh manual
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.onSurface, size: 22),
+            onPressed: loadData,
+            tooltip: 'Refresh Data',
+          ),
+
           // Notification Bell Button
           Container(
             width: 38,
@@ -99,118 +179,95 @@ class AnalyticsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Date Month Selector Card
-              _buildMonthSelectorCard(),
-              const SizedBox(height: 14),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: loadData,
+              color: AppColors.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Date Month Selector Card
+                      _buildMonthSelectorCard(),
+                      const SizedBox(height: 14),
 
-              // Total Spent / Budget Summary Card
-              _buildTotalSpentCard(),
-              const SizedBox(height: 18),
+                      // Total Spent Summary Card (Real Data)
+                      _buildTotalSpentCard(totalExpense: totalExpense, totalIncome: totalIncome),
+                      const SizedBox(height: 18),
 
-              // Category Budgets Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Category Budgets',
-                    style: TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.onSurface,
-                    ),
+                      if (!hasExpenses)
+                        _buildEmptyExpenseState()
+                      else ...[
+                        // Category Budgets Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Category Budgets',
+                              style: TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.onSurface,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD4EFE1),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Text(
+                                'Manage',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF006C49),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Placeholder preview for Step 2.2
+                        _buildCategoryCard(
+                          icon: Icons.pie_chart_rounded,
+                          iconBgColor: const Color(0xFFD4EFE1),
+                          iconColor: const Color(0xFF006C49),
+                          title: 'Total Tracked',
+                          subtitle: '${monthlyTransactions.where((t) => t.type == TransactionType.expense).length} transactions recorded',
+                          spent: '\$${_formatAmount(totalExpense)}',
+                          total: '\$${_formatAmount(totalIncome > 0 ? totalIncome : totalExpense)}',
+                          progress: totalIncome > 0 ? (totalExpense / totalIncome).clamp(0.0, 1.0) : 1.0,
+                          progressColor: const Color(0xFF059669),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Smart Insight Card
+                        _buildSmartInsightCard(totalExpense: totalExpense, totalIncome: totalIncome),
+                      ],
+
+                      // Space for bottom nav bar
+                      const SizedBox(height: 90),
+                    ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD4EFE1),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Text(
-                      'Manage',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF006C49),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 12),
-
-              // Category Budget Cards
-              _buildCategoryCard(
-                icon: Icons.bakery_dining_rounded,
-                iconBgColor: const Color(0xFFFFE5D9),
-                iconColor: const Color(0xFFD97706),
-                title: 'Food & Dining',
-                subtitle: 'Restaurants & takeout',
-                spent: r'$450',
-                total: r'$600',
-                progress: 450 / 600,
-                progressColor: const Color(0xFFEA580C),
-              ),
-              const SizedBox(height: 10),
-
-              _buildCategoryCard(
-                icon: Icons.eco_rounded,
-                iconBgColor: const Color(0xFFD4EFE1),
-                iconColor: const Color(0xFF006C49),
-                title: 'Groceries',
-                subtitle: 'Supermarkets & fresh produce',
-                spent: r'$284',
-                total: r'$500',
-                progress: 284 / 500,
-                progressColor: const Color(0xFF059669),
-              ),
-              const SizedBox(height: 10),
-
-              _buildCategoryCard(
-                icon: Icons.electric_moped_rounded,
-                iconBgColor: const Color(0xFFE4E0FF),
-                iconColor: const Color(0xFF6366F1),
-                title: 'Transport',
-                subtitle: 'Metro, rides & fuel',
-                spent: r'$95',
-                total: r'$200',
-                progress: 95 / 200,
-                progressColor: const Color(0xFF6366F1),
-              ),
-              const SizedBox(height: 10),
-
-              _buildCategoryCard(
-                icon: Icons.shopping_bag_outlined,
-                iconBgColor: const Color(0xFFFFD4DF),
-                iconColor: const Color(0xFFE11D48),
-                title: 'Shopping & Retail',
-                subtitle: 'Clothing & essentials',
-                spent: r'$210',
-                total: r'$350',
-                progress: 210 / 350,
-                progressColor: const Color(0xFFE11D48),
-              ),
-              const SizedBox(height: 14),
-
-              // Smart Insight Card
-              _buildSmartInsightCard(),
-
-              // Space for bottom nav bar
-              const SizedBox(height: 90),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
   Widget _buildMonthSelectorCard() {
+    final monthLabel = DateFormat('MMMM yyyy').format(_selectedMonth);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -224,38 +281,42 @@ class AnalyticsScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left Chevron Button
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: const Color(0xFFE2CFC2),
-                width: 1,
+          // Left Chevron Button (Bulan Sebelumnya)
+          InkWell(
+            onTap: _prevMonth,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFFE2CFC2),
+                  width: 1,
+                ),
               ),
-            ),
-            child: const Icon(
-              Icons.chevron_left_rounded,
-              color: AppColors.onSurface,
-              size: 20,
+              child: const Icon(
+                Icons.chevron_left_rounded,
+                color: AppColors.onSurface,
+                size: 20,
+              ),
             ),
           ),
 
           // Center Date
           Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(
+            children: [
+              const Icon(
                 Icons.calendar_today_outlined,
                 color: Color(0xFF006C49),
                 size: 16,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
-                'October 2024',
-                style: TextStyle(
+                monthLabel,
+                style: const TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,
@@ -264,22 +325,26 @@ class AnalyticsScreen extends StatelessWidget {
             ],
           ),
 
-          // Right Chevron Button
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: const Color(0xFFE2CFC2),
-                width: 1,
+          // Right Chevron Button (Bulan Berikutnya)
+          InkWell(
+            onTap: _nextMonth,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFFE2CFC2),
+                  width: 1,
+                ),
               ),
-            ),
-            child: const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.onSurface,
-              size: 20,
+              child: const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.onSurface,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -287,7 +352,10 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalSpentCard() {
+  Widget _buildTotalSpentCard({required double totalExpense, required double totalIncome}) {
+    final double netRemaining = totalIncome - totalExpense;
+    final bool isOnTrack = totalExpense <= totalIncome;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -301,12 +369,12 @@ class AnalyticsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Total Spent label + On Track badge
+          // Top Row: Total Spent label + Status badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'TOTAL SPENT',
+                'TOTAL SPENT THIS MONTH',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -317,24 +385,24 @@ class AnalyticsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD4EFE1),
+                  color: isOnTrack ? const Color(0xFFD4EFE1) : const Color(0xFFFFE5E5),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(
-                      Icons.check_circle_outline_rounded,
+                      isOnTrack ? Icons.check_circle_outline_rounded : Icons.info_outline_rounded,
                       size: 14,
-                      color: Color(0xFF006C49),
+                      color: isOnTrack ? const Color(0xFF006C49) : const Color(0xFFBD382B),
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
-                      'On Track',
+                      isOnTrack ? 'On Track' : 'Over Budget',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF006C49),
+                        color: isOnTrack ? const Color(0xFF006C49) : const Color(0xFFBD382B),
                       ),
                     ),
                   ],
@@ -348,96 +416,123 @@ class AnalyticsScreen extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
-            children: const [
+            children: [
               Text(
-                r'$1,420.50',
-                style: TextStyle(
+                '\$${_formatAmount(totalExpense)}',
+                style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   color: AppColors.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
-              SizedBox(width: 6),
-              Text(
-                r'/ $2,500',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF6E7A72),
+              const SizedBox(width: 6),
+              if (totalIncome > 0)
+                Text(
+                  '/ \$${_formatAmount(totalIncome)} inc',
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF6E7A72),
+                  ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
 
-          // Segmented Progress Bar
+          // Progress Bar
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Container(
-              height: 10,
-              color: const Color(0xFFF0E4DA),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 30,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF59E0B),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(8),
-                          bottomLeft: Radius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    flex: 20,
-                    child: Container(color: const Color(0xFF6EE7B7)),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    flex: 18,
-                    child: Container(color: const Color(0xFF93C5FD)),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    flex: 14,
-                    child: Container(color: const Color(0xFFFCA5A5)),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    flex: 18,
-                    child: Container(color: Colors.transparent),
-                  ),
-                ],
+            child: LinearProgressIndicator(
+              value: totalIncome > 0 ? (totalExpense / totalIncome).clamp(0.0, 1.0) : (totalExpense > 0 ? 1.0 : 0.0),
+              minHeight: 8,
+              backgroundColor: const Color(0xFFF0E4DA),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isOnTrack ? const Color(0xFF006C49) : const Color(0xFFBD382B),
               ),
             ),
           ),
           const SizedBox(height: 8),
 
-          // Bottom Stats: 57% allocated | $1,079.50 available
+          // Bottom Stats
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
+            children: [
               Text(
-                '57% allocated',
-                style: TextStyle(
+                totalIncome > 0
+                    ? '${((totalExpense / totalIncome) * 100).toStringAsFixed(1)}% of income'
+                    : 'Expense tracked',
+                style: const TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,
                   color: Color(0xFF6E7A72),
                 ),
               ),
               Text(
-                r'$1,079.50 available',
+                netRemaining >= 0
+                    ? '+\$${_formatAmount(netRemaining)} remaining'
+                    : '-\$${_formatAmount(netRemaining.abs())} deficit',
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF006C49),
+                  color: netRemaining >= 0 ? const Color(0xFF006C49) : const Color(0xFFBD382B),
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tampilan jika belum ada transaksi di bulan yang dipilih
+  Widget _buildEmptyExpenseState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF2EB),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.borderSubtle,
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F7F0),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFCBEBD8), width: 1.5),
+            ),
+            child: const Icon(
+              Icons.query_stats_rounded,
+              color: Color(0xFF006C49),
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'No Expenses This Month',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Transactions you add with the (+) button will automatically appear here to visualize your spending trends.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: Color(0xFF757575),
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -551,7 +646,7 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSmartInsightCard() {
+  Widget _buildSmartInsightCard({required double totalExpense, required double totalIncome}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -607,21 +702,23 @@ class AnalyticsScreen extends StatelessWidget {
                         color: const Color(0xFFD4EFE1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text(
-                        'Saved 18%',
+                      child: Text(
+                        totalIncome > totalExpense ? 'Positive' : 'Attention',
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF006C49),
+                          color: totalIncome > totalExpense ? const Color(0xFF006C49) : const Color(0xFFBD382B),
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 3),
-                const Text(
-                  'You spent less on takeout this week compared to last!',
-                  style: TextStyle(
+                Text(
+                  totalIncome >= totalExpense
+                      ? 'You are saving \$${_formatAmount(totalIncome - totalExpense)} this month. Keep it up!'
+                      : 'Expenses exceed income by \$${_formatAmount(totalExpense - totalIncome)} this month.',
+                  style: const TextStyle(
                     fontSize: 11.5,
                     color: Color(0xFF6E7A72),
                     height: 1.3,

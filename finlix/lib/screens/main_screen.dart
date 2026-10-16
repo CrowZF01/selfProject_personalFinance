@@ -16,10 +16,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey<DashboardScreenState>();
+  final GlobalKey<AnalyticsScreenState> _analyticsKey = GlobalKey<AnalyticsScreenState>();
 
   late final List<Widget> _screens = [
     DashboardScreen(key: _dashboardKey),
-    const AnalyticsScreen(),
+    AnalyticsScreen(key: _analyticsKey),
     const SavingsScreen(),
     const ProfileScreen(),
   ];
@@ -38,6 +39,11 @@ class _MainScreenState extends State<MainScreen> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 0) {
+            _dashboardKey.currentState?.loadData();
+          } else if (index == 1) {
+            _analyticsKey.currentState?.loadData();
+          }
         },
         onAddTap: () async {
           final result = await Navigator.push<bool>(
@@ -49,6 +55,7 @@ class _MainScreenState extends State<MainScreen> {
 
           if (result == true) {
             _dashboardKey.currentState?.loadData();
+            _analyticsKey.currentState?.loadData();
           }
         },
       ),
