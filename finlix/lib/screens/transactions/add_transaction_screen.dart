@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
 import '../../models/transaction_model.dart';
-
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -17,6 +17,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String _amount = '18.50';
   String _note = 'Coffee';
   int _selectedCategoryIndex = 0;
+  DateTime? _selectedDate;
+
+  DateTime get selectedDate => _selectedDate ?? DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = DateTime.now();
+  }
 
   List<Map<String, dynamic>> get _categories {
     final list = _isExpense
@@ -134,6 +143,59 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  String _formatDateLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final check = DateTime(date.year, date.month, date.day);
+
+    if (check == today) {
+      return 'Today';
+    } else if (check == yesterday) {
+      return 'Yesterday';
+    } else if (check.year == now.year) {
+      return DateFormat('d MMM').format(date);
+    } else {
+      return DateFormat('d MMM yyyy').format(date);
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035),
+      builder: (pickerCtx, child) {
+        return Theme(
+          data: Theme.of(pickerCtx).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: AppColors.background,
+              onSurface: AppColors.onSurface,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        final now = DateTime.now();
+        _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          now.hour,
+          now.minute,
+          now.second,
+        );
+      });
+    }
+  }
+
   bool _isSaving = false;
 
   /// Save the transaction to SQLite and close the screen.
@@ -159,7 +221,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         amount: parsedAmount,
         type: _isExpense ? TransactionType.expense : TransactionType.income,
         categoryId: catId,
-        date: DateTime.now(),
+        date: selectedDate,
         note: _note,
       );
 
@@ -190,8 +252,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
+    _selectedDate ??= DateTime.now();
+    final curDate = selectedDate;
+    final now = DateTime.now();
+    final isCustomDate = curDate.year != now.year ||
+        curDate.month != now.month ||
+        curDate.day != now.day;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -230,36 +299,43 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
         actions: [
-          // Date Selector Pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF2EB),
+          // Date Selector Pill (Clickable)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _pickDate,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: const Color(0xFFE2CFC2),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 13,
-                  color: Color(0xFF8E4C3B),
-                ),
-                SizedBox(width: 4),
-                Text(
-                  'Today',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.onSurface,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: isCustomDate ? const Color(0xFFE8F7F0) : const Color(0xFFFAF2EB),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isCustomDate ? AppColors.primary : const Color(0xFFE2CFC2),
+                    width: 1.1,
                   ),
                 ),
-              ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 13,
+                      color: isCustomDate ? AppColors.primary : const Color(0xFF8E4C3B),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      _formatDateLabel(curDate),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isCustomDate ? AppColors.primary : AppColors.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
 
@@ -739,7 +815,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF00583A).withOpacity(0.3),
+                            color: const Color(0xFF00583A).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),

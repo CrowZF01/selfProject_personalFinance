@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/transaction_model.dart';
@@ -12,13 +14,20 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class AnalyticsScreenState extends State<AnalyticsScreen> {
-  DateTime _selectedMonth = DateTime.now();
+  DateTime? _selectedMonth;
+  DateTime get selectedMonth => _selectedMonth ?? DateTime.now();
+
   List<TransactionModel> _allTransactions = [];
   bool _isLoading = true;
+
+  int _selectedChartTab = 0; // 0 = Donut Chart, 1 = Weekly Bar Chart
+  int _touchedPieIndex = -1;
+  int _touchedBarIndex = -1;
 
   @override
   void initState() {
     super.initState();
+    _selectedMonth = DateTime.now();
     loadData();
   }
 
@@ -42,15 +51,21 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
 
   /// Pindah ke bulan sebelumnya
   void _prevMonth() {
+    final cur = selectedMonth;
     setState(() {
-      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+      _selectedMonth = DateTime(cur.year, cur.month - 1);
+      _touchedPieIndex = -1;
+      _touchedBarIndex = -1;
     });
   }
 
   /// Pindah ke bulan berikutnya
   void _nextMonth() {
+    final cur = selectedMonth;
     setState(() {
-      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+      _selectedMonth = DateTime(cur.year, cur.month + 1);
+      _touchedPieIndex = -1;
+      _touchedBarIndex = -1;
     });
   }
 
@@ -61,23 +76,40 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final curMonth = selectedMonth;
+
     // Filter transaksi berdasarkan bulan & tahun yang dipilih
     final monthlyTransactions = _allTransactions.where((tx) {
-      return tx.date.year == _selectedMonth.year && tx.date.month == _selectedMonth.month;
+      return tx.date.year == curMonth.year && tx.date.month == curMonth.month;
     }).toList();
 
     // Hitung total pengeluaran & pemasukan bulan ini
     double totalExpense = 0;
     double totalIncome = 0;
+    final List<TransactionModel> expenseTransactions = [];
+
     for (var tx in monthlyTransactions) {
       if (tx.type == TransactionType.expense) {
         totalExpense += tx.amount;
+        expenseTransactions.add(tx);
       } else {
         totalIncome += tx.amount;
       }
     }
 
     final hasExpenses = totalExpense > 0;
+
+    // Hitung pengeluaran per kategori
+    final Map<String, double> categoryTotals = {};
+    final Map<String, int> categoryCounts = {};
+    for (var tx in expenseTransactions) {
+      categoryTotals[tx.categoryId] = (categoryTotals[tx.categoryId] ?? 0) + tx.amount;
+      categoryCounts[tx.categoryId] = (categoryCounts[tx.categoryId] ?? 0) + 1;
+    }
+
+    // Urutkan kategori berdasarkan total pengeluaran terbesar
+    final sortedCategoryEntries = categoryTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -199,19 +231,31 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                       _buildMonthSelectorCard(),
                       const SizedBox(height: 14),
 
-                      // Total Spent Summary Card (Real Data)
-                      _buildTotalSpentCard(totalExpense: totalExpense, totalIncome: totalIncome),
+                      // Total Spent Summary Card dengan Segmented Category Progress Bar
+                      _buildTotalSpentCard(
+                        totalExpense: totalExpense,
+                        totalIncome: totalIncome,
+                        sortedCategories: sortedCategoryEntries,
+                      ),
                       const SizedBox(height: 18),
 
                       if (!hasExpenses)
                         _buildEmptyExpenseState()
                       else ...[
-                        // Category Budgets Header
+                        // Step 2.3: Visualisasi Donut/Pie Chart & Weekly Bar Chart (fl_chart)
+                        _buildChartCard(
+                          totalExpense: totalExpense,
+                          sortedCategories: sortedCategoryEntries,
+                          expenseTransactions: expenseTransactions,
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Category Breakdown Header
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
-                              'Category Budgets',
+                              'Category Breakdown',
                               style: TextStyle(
                                 fontSize: 16.5,
                                 fontWeight: FontWeight.w700,
@@ -219,14 +263,14 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFD4EFE1),
+                                color: const Color(0xFFE8F7F0),
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: const Text(
-                                'Manage',
-                                style: TextStyle(
+                              child: Text(
+                                '${sortedCategoryEntries.length} ${sortedCategoryEntries.length == 1 ? "Category" : "Categories"}',
+                                style: const TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF006C49),
@@ -237,22 +281,44 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Placeholder preview for Step 2.2
-                        _buildCategoryCard(
-                          icon: Icons.pie_chart_rounded,
-                          iconBgColor: const Color(0xFFD4EFE1),
-                          iconColor: const Color(0xFF006C49),
-                          title: 'Total Tracked',
-                          subtitle: '${monthlyTransactions.where((t) => t.type == TransactionType.expense).length} transactions recorded',
-                          spent: '\$${_formatAmount(totalExpense)}',
-                          total: '\$${_formatAmount(totalIncome > 0 ? totalIncome : totalExpense)}',
-                          progress: totalIncome > 0 ? (totalExpense / totalIncome).clamp(0.0, 1.0) : 1.0,
-                          progressColor: const Color(0xFF059669),
+                        // Daftar Kartu Kategori Riil dari Database
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: sortedCategoryEntries.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final entry = sortedCategoryEntries[index];
+                            final cat = DefaultCategories.byId(entry.key);
+                            final spent = entry.value;
+                            final count = categoryCounts[entry.key] ?? 1;
+                            final percentage = totalExpense > 0 ? (spent / totalExpense) * 100 : 0.0;
+
+                            final icon = cat?.icon ?? Icons.category_rounded;
+                            final color = cat?.color ?? AppColors.primary;
+                            final name = cat?.name ?? 'Other';
+
+                            return _buildCategoryCard(
+                              icon: icon,
+                              iconBgColor: color.withValues(alpha: 0.16),
+                              iconColor: color,
+                              title: name,
+                              subtitle: '$count ${count == 1 ? "transaction" : "transactions"} • ${percentage.toStringAsFixed(1)}%',
+                              spent: '\$${_formatAmount(spent)}',
+                              total: '\$${_formatAmount(totalExpense)}',
+                              progress: totalExpense > 0 ? (spent / totalExpense) : 0.0,
+                              progressColor: color,
+                            );
+                          },
                         ),
                         const SizedBox(height: 14),
 
-                        // Smart Insight Card
-                        _buildSmartInsightCard(totalExpense: totalExpense, totalIncome: totalIncome),
+                        // Dynamic Smart Insight Card
+                        _buildSmartInsightCard(
+                          totalExpense: totalExpense,
+                          totalIncome: totalIncome,
+                          topCategoryEntry: sortedCategoryEntries.isNotEmpty ? sortedCategoryEntries.first : null,
+                        ),
                       ],
 
                       // Space for bottom nav bar
@@ -265,8 +331,498 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
+  /// Kartu Visualisasi Grafik Interaktif (Donut Share & Weekly Bar Chart)
+  Widget _buildChartCard({
+    required double totalExpense,
+    required List<MapEntry<String, double>> sortedCategories,
+    required List<TransactionModel> expenseTransactions,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF2EB),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.borderSubtle,
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row: Judul & Switch Tab Grafik
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'SPENDING BREAKDOWN',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: Color(0xFF6E7A72),
+                ),
+              ),
+              // Segmented Toggle Pill (Donut / Bar)
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0E4DA),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildChartToggleTab(
+                      index: 0,
+                      icon: Icons.donut_large_rounded,
+                      label: 'Donut',
+                    ),
+                    const SizedBox(width: 3),
+                    _buildChartToggleTab(
+                      index: 1,
+                      icon: Icons.bar_chart_rounded,
+                      label: 'Weekly',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Tampilan Grafik Sesuai Tab Terpilih
+          if (_selectedChartTab == 0)
+            _buildDonutChartSection(
+              totalExpense: totalExpense,
+              sortedCategories: sortedCategories,
+            )
+          else
+            _buildWeeklyBarChartSection(
+              expenseTransactions: expenseTransactions,
+              totalExpense: totalExpense,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartToggleTab({
+    required int index,
+    required IconData icon,
+    required String label,
+  }) {
+    final bool isSelected = _selectedChartTab == index;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedChartTab = index;
+          _touchedPieIndex = -1;
+          _touchedBarIndex = -1;
+        });
+      },
+      borderRadius: BorderRadius.circular(11),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(11),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected ? Colors.white : const Color(0xFF6E7A72),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                color: isSelected ? Colors.white : const Color(0xFF6E7A72),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDonutChartSection({
+    required double totalExpense,
+    required List<MapEntry<String, double>> sortedCategories,
+  }) {
+    MapEntry<String, double>? activeEntry;
+    if (_touchedPieIndex >= 0 && _touchedPieIndex < sortedCategories.length) {
+      activeEntry = sortedCategories[_touchedPieIndex];
+    }
+
+    final activeCat = activeEntry != null ? DefaultCategories.byId(activeEntry.key) : null;
+    final activeSpent = activeEntry?.value ?? totalExpense;
+    final activePercentage = totalExpense > 0 ? (activeSpent / totalExpense) * 100 : 0.0;
+    final activeTitle = activeCat?.name ?? 'Total Spent';
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 205,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
+                          _touchedPieIndex = -1;
+                          return;
+                        }
+                        _touchedPieIndex =
+                            pieTouchResponse.touchedSection!.touchedSectionIndex;
+                      });
+                    },
+                  ),
+                  borderData: FlBorderData(show: false),
+                  sectionsSpace: 3,
+                  centerSpaceRadius: 52,
+                  sections: sortedCategories.asMap().entries.map((item) {
+                    final index = item.key;
+                    final entry = item.value;
+                    final cat = DefaultCategories.byId(entry.key);
+                    final color = cat?.color ?? AppColors.primary;
+                    final double spent = entry.value;
+                    final double percent = totalExpense > 0 ? (spent / totalExpense) * 100 : 0;
+                    final isTouched = index == _touchedPieIndex;
+                    final radius = isTouched ? 36.0 : 28.0;
+
+                    return PieChartSectionData(
+                      color: color,
+                      value: spent,
+                      title: '${percent.toStringAsFixed(0)}%',
+                      radius: radius,
+                      showTitle: percent >= 8,
+                      titleStyle: TextStyle(
+                        fontSize: isTouched ? 12.5 : 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black26,
+                            blurRadius: 3,
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+              // Konten Tengah Lubang Donut (Nama Kategori & Nominal)
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    activeCat != null ? activeTitle : 'Total Spent',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: activeCat?.color ?? const Color(0xFF757575),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '\$${_formatAmount(activeSpent)}',
+                    style: const TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.onSurface,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  if (activeCat != null)
+                    Text(
+                      '${activePercentage.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: activeCat.color,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Interactive Legend Wrap
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          alignment: WrapAlignment.center,
+          children: sortedCategories.asMap().entries.map((item) {
+            final index = item.key;
+            final entry = item.value;
+            final cat = DefaultCategories.byId(entry.key);
+            final color = cat?.color ?? AppColors.primary;
+            final name = cat?.name ?? 'Other';
+            final percent = totalExpense > 0 ? (entry.value / totalExpense) * 100 : 0.0;
+            final isSelected = index == _touchedPieIndex;
+
+            return InkWell(
+              onTap: () {
+                setState(() {
+                  _touchedPieIndex = isSelected ? -1 : index;
+                });
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isSelected ? color.withValues(alpha: 0.18) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected ? color : const Color(0xFFE2CFC2),
+                    width: isSelected ? 1.4 : 0.8,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$name ${percent.toStringAsFixed(0)}%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected ? AppColors.onSurface : const Color(0xFF6E7A72),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyBarChartSection({
+    required List<TransactionModel> expenseTransactions,
+    required double totalExpense,
+  }) {
+    // Kelompokkan pengeluaran ke 5 rentang mingguan dalam sebulan
+    final weeklyTotals = [0.0, 0.0, 0.0, 0.0, 0.0];
+    for (var tx in expenseTransactions) {
+      final day = tx.date.day;
+      if (day <= 7) {
+        weeklyTotals[0] += tx.amount;
+      } else if (day <= 14) {
+        weeklyTotals[1] += tx.amount;
+      } else if (day <= 21) {
+        weeklyTotals[2] += tx.amount;
+      } else if (day <= 28) {
+        weeklyTotals[3] += tx.amount;
+      } else {
+        weeklyTotals[4] += tx.amount;
+      }
+    }
+
+    double maxVal = 0;
+    int peakWeekIndex = 0;
+    for (int i = 0; i < weeklyTotals.length; i++) {
+      if (weeklyTotals[i] > maxVal) {
+        maxVal = weeklyTotals[i];
+        peakWeekIndex = i;
+      }
+    }
+    final maxY = maxVal > 0 ? maxVal * 1.25 : 100.0;
+    final weeklyAvg = weeklyTotals.reduce((a, b) => a + b) / 5;
+
+    final weekLabels = ['W1\n1-7', 'W2\n8-14', 'W3\n15-21', 'W4\n22-28', 'W5\n29+'];
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 180,
+          child: BarChart(
+            BarChartData(
+              maxY: maxY,
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchCallback: (FlTouchEvent event, barTouchResponse) {
+                  setState(() {
+                    if (!event.isInterestedForInteractions ||
+                        barTouchResponse == null ||
+                        barTouchResponse.spot == null) {
+                      _touchedBarIndex = -1;
+                      return;
+                    }
+                    _touchedBarIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+                  });
+                },
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipColor: (group) => const Color(0xFF2C3E35),
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    final weekNum = group.x + 1;
+                    return BarTooltipItem(
+                      'Week $weekNum\n\$${_formatAmount(rod.toY)}',
+                      const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              titlesData: FlTitlesData(
+                show: true,
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 34,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index < 0 || index >= weekLabels.length) {
+                        return const SizedBox();
+                      }
+                      final isSelected = index == _touchedBarIndex || index == peakWeekIndex;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          weekLabels[index],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected ? AppColors.primary : const Color(0xFF757575),
+                            height: 1.15,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: maxY / 3,
+                getDrawingHorizontalLine: (value) => const FlLine(
+                  color: Color(0xFFEBDDD3),
+                  strokeWidth: 1,
+                  dashArray: [4, 4],
+                ),
+              ),
+              barGroups: weeklyTotals.asMap().entries.map((item) {
+                final index = item.key;
+                final val = item.value;
+                final isPeak = index == peakWeekIndex && val > 0;
+                final isTouched = index == _touchedBarIndex;
+
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: val,
+                      color: isTouched
+                          ? const Color(0xFF00583A)
+                          : isPeak
+                              ? AppColors.primary
+                              : const Color(0xFF81B29A),
+                      width: 22,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                      backDrawRodData: BackgroundBarChartRodData(
+                        show: true,
+                        toY: maxY,
+                        color: const Color(0xFFF3E7DC),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Bottom Stats Summary Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F7F0),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.trending_up_rounded, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    maxVal > 0
+                        ? 'Peak: Week ${peakWeekIndex + 1} (\$${_formatAmount(maxVal)})'
+                        : 'No expenses yet',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              'Weekly Avg: \$${_formatAmount(weeklyAvg)}',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6E7A72),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildMonthSelectorCard() {
-    final monthLabel = DateFormat('MMMM yyyy').format(_selectedMonth);
+    final cur = selectedMonth;
+    final monthLabel = DateFormat('MMMM yyyy').format(cur);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -281,7 +837,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left Chevron Button (Bulan Sebelumnya)
+          // Left Chevron Button
           InkWell(
             onTap: _prevMonth,
             borderRadius: BorderRadius.circular(10),
@@ -304,28 +860,44 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
 
-          // Center Date
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.calendar_today_outlined,
-                color: Color(0xFF006C49),
-                size: 16,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                monthLabel,
-                style: const TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.onSurface,
+          // Center Date (Clickable to open month picker modal)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _showMonthPickerModal,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      color: Color(0xFF006C49),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      monthLabel,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 16,
+                      color: AppColors.onSurface,
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
 
-          // Right Chevron Button (Bulan Berikutnya)
+          // Right Chevron Button
           InkWell(
             onTap: _nextMonth,
             borderRadius: BorderRadius.circular(10),
@@ -352,7 +924,236 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildTotalSpentCard({required double totalExpense, required double totalIncome}) {
+  /// Modal Pemilih Bulan & Tahun langsung di Analytics Screen
+  void _showMonthPickerModal() {
+    int pickerYear = selectedMonth.year;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (bottomSheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final months = [
+              {'name': 'Jan', 'val': 1},
+              {'name': 'Feb', 'val': 2},
+              {'name': 'Mar', 'val': 3},
+              {'name': 'Apr', 'val': 4},
+              {'name': 'May', 'val': 5},
+              {'name': 'Jun', 'val': 6},
+              {'name': 'Jul', 'val': 7},
+              {'name': 'Aug', 'val': 8},
+              {'name': 'Sep', 'val': 9},
+              {'name': 'Oct', 'val': 10},
+              {'name': 'Nov', 'val': 11},
+              {'name': 'Dec', 'val': 12},
+            ];
+
+            final currentNow = DateTime.now();
+
+            return Container(
+              decoration: const BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag Handle
+                  Container(
+                    width: 42,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDCC8BB),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Header Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Pilih Bulan Analitik',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          backgroundColor: const Color(0xFFE8F7F0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _selectedMonth = DateTime.now();
+                            _touchedPieIndex = -1;
+                            _touchedBarIndex = -1;
+                          });
+                          Navigator.pop(bottomSheetContext);
+                        },
+                        icon: const Icon(Icons.today_rounded, size: 16),
+                        label: const Text(
+                          'Bulan Ini',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Year Navigation Selector
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFAF2EB),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFE2CFC2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left_rounded, color: AppColors.onSurface),
+                          onPressed: () {
+                            setModalState(() {
+                              pickerYear--;
+                            });
+                          },
+                        ),
+                        Text(
+                          '$pickerYear',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right_rounded, color: AppColors.onSurface),
+                          onPressed: () {
+                            setModalState(() {
+                              pickerYear++;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Grid of 12 Months (4 columns x 3 rows)
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 1.45,
+                    ),
+                    itemCount: 12,
+                    itemBuilder: (context, index) {
+                      final m = months[index];
+                      final int monthVal = m['val'] as int;
+                      final bool isSelected = selectedMonth.year == pickerYear &&
+                          selectedMonth.month == monthVal;
+                      final bool isCurrentMonth =
+                          currentNow.year == pickerYear && currentNow.month == monthVal;
+
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedMonth = DateTime(pickerYear, monthVal, 1);
+                              _touchedPieIndex = -1;
+                              _touchedBarIndex = -1;
+                            });
+                            Navigator.pop(bottomSheetContext);
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : isCurrentMonth
+                                      ? const Color(0xFFE8F7F0)
+                                      : const Color(0xFFFAF2EB),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : isCurrentMonth
+                                        ? const Color(0xFF9BDBC1)
+                                        : const Color(0xFFE2CFC2),
+                                width: isSelected ? 1.5 : 1,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  m['name'] as String,
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: isSelected || isCurrentMonth
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : isCurrentMonth
+                                            ? AppColors.primary
+                                            : AppColors.onSurface,
+                                  ),
+                                ),
+                                if (isCurrentMonth && !isSelected)
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 2),
+                                    width: 4,
+                                    height: 4,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTotalSpentCard({
+    required double totalExpense,
+    required double totalIncome,
+    required List<MapEntry<String, double>> sortedCategories,
+  }) {
     final double netRemaining = totalIncome - totalExpense;
     final bool isOnTrack = totalExpense <= totalIncome;
 
@@ -440,16 +1241,28 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Progress Bar
+          // Dynamic Segmented Category Bar
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: totalIncome > 0 ? (totalExpense / totalIncome).clamp(0.0, 1.0) : (totalExpense > 0 ? 1.0 : 0.0),
-              minHeight: 8,
-              backgroundColor: const Color(0xFFF0E4DA),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                isOnTrack ? const Color(0xFF006C49) : const Color(0xFFBD382B),
-              ),
+            child: Container(
+              height: 10,
+              color: const Color(0xFFF0E4DA),
+              child: sortedCategories.isEmpty
+                  ? const SizedBox()
+                  : Row(
+                      children: sortedCategories.map((entry) {
+                        final cat = DefaultCategories.byId(entry.key);
+                        final color = cat?.color ?? AppColors.primary;
+                        final flex = ((entry.value / totalExpense) * 1000).toInt().clamp(1, 1000);
+                        return Expanded(
+                          flex: flex,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 0.5),
+                            color: color,
+                          ),
+                        );
+                      }).toList(),
+                    ),
             ),
           ),
           const SizedBox(height: 8),
@@ -461,7 +1274,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               Text(
                 totalIncome > 0
                     ? '${((totalExpense / totalIncome) * 100).toStringAsFixed(1)}% of income'
-                    : 'Expense tracked',
+                    : '${sortedCategories.length} categories tracked',
                 style: const TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,
@@ -485,7 +1298,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  /// Tampilan jika belum ada transaksi di bulan yang dipilih
   Widget _buildEmptyExpenseState() {
     return Container(
       width: double.infinity,
@@ -636,7 +1448,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
-              minHeight: 4.5,
+              minHeight: 5,
               backgroundColor: const Color(0xFFEDE0D4),
               valueColor: AlwaysStoppedAnimation<Color>(progressColor),
             ),
@@ -646,7 +1458,32 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildSmartInsightCard({required double totalExpense, required double totalIncome}) {
+  Widget _buildSmartInsightCard({
+    required double totalExpense,
+    required double totalIncome,
+    required MapEntry<String, double>? topCategoryEntry,
+  }) {
+    String insightTitle = 'Smart Insight';
+    String badgeText = 'Positive';
+    Color badgeColor = const Color(0xFF006C49);
+    Color badgeBg = const Color(0xFFD4EFE1);
+    String insightMessage = '';
+
+    if (topCategoryEntry != null) {
+      final cat = DefaultCategories.byId(topCategoryEntry.key);
+      final catName = cat?.name ?? 'Other';
+      final double percentage = totalExpense > 0 ? (topCategoryEntry.value / totalExpense) * 100 : 0;
+
+      badgeText = 'Top Category';
+      badgeColor = const Color(0xFFD97706);
+      badgeBg = const Color(0xFFFFEDD5);
+
+      insightMessage =
+          '$catName is your largest expense this month, accounting for \$${_formatAmount(topCategoryEntry.value)} (${percentage.toStringAsFixed(0)}% of total spent).';
+    } else {
+      insightMessage = 'You have no expenses recorded for this month yet.';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -688,9 +1525,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Smart Insight',
-                      style: TextStyle(
+                    Text(
+                      insightTitle,
+                      style: const TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
@@ -699,15 +1536,15 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD4EFE1),
+                        color: badgeBg,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        totalIncome > totalExpense ? 'Positive' : 'Attention',
+                        badgeText,
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: totalIncome > totalExpense ? const Color(0xFF006C49) : const Color(0xFFBD382B),
+                          color: badgeColor,
                         ),
                       ),
                     ),
@@ -715,9 +1552,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  totalIncome >= totalExpense
-                      ? 'You are saving \$${_formatAmount(totalIncome - totalExpense)} this month. Keep it up!'
-                      : 'Expenses exceed income by \$${_formatAmount(totalExpense - totalIncome)} this month.',
+                  insightMessage,
                   style: const TextStyle(
                     fontSize: 11.5,
                     color: Color(0xFF6E7A72),
