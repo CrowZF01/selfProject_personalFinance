@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/localization/app_language.dart';
 import '../../models/savings_goal_model.dart';
 
 class SavingsScreen extends StatefulWidget {
@@ -100,8 +99,8 @@ class SavingsScreenState extends State<SavingsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
+              children: const [
+                Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -111,8 +110,8 @@ class SavingsScreenState extends State<SavingsScreen> {
                   ),
                 ),
                 Text(
-                  AppLanguage.tr('nav_pots'),
-                  style: const TextStyle(
+                  'Pots & Goals',
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -232,40 +231,34 @@ class SavingsScreenState extends State<SavingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        AppLanguage.tr('total_saved').toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.6,
-                          color: Color(0xFF8E4C3B),
-                        ),
+              Row(
+                children: [
+                  const Text(
+                    'TOTAL SAVINGS',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                      color: Color(0xFF8E4C3B),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD4EFE1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_goals.length} ${_goals.length == 1 ? "Pot" : "Pots"}',
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF006C49),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD4EFE1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${_goals.length} ${_goals.length == 1 ? AppLanguage.tr('pot_unit_single') : AppLanguage.tr('pots_unit')}',
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF006C49),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
 
               // Interactive New Pot Button
@@ -287,16 +280,16 @@ class SavingsScreenState extends State<SavingsScreen> {
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
+                    children: const [
+                      Icon(
                         Icons.add_rounded,
                         size: 16,
                         color: Color(0xFF00583A),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
-                        AppLanguage.tr('create_pot'),
-                        style: const TextStyle(
+                        'New Pot',
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF00583A),
@@ -362,32 +355,22 @@ class SavingsScreenState extends State<SavingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Text(
-                  '${AppLanguage.tr('combined_target')}: \$${_formatAmount(totalTarget)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF6E7A72),
-                  ),
+              Text(
+                'Target: \$${_formatAmount(totalTarget)}',
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF6E7A72),
                 ),
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  totalTarget > totalSaved
-                      ? '\$${_formatAmount(totalTarget - totalSaved)} ${AppLanguage.tr('left_to_go')}'
-                      : AppLanguage.tr('goal_reached'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: totalTarget > totalSaved ? const Color(0xFF8E4C3B) : const Color(0xFF006C49),
-                  ),
+              Text(
+                totalTarget > totalSaved
+                    ? '\$${_formatAmount(totalTarget - totalSaved)} needed'
+                    : 'All Goals Funded! 🎉',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: totalTarget > totalSaved ? const Color(0xFF8E4C3B) : const Color(0xFF006C49),
                 ),
               ),
             ],
@@ -430,19 +413,19 @@ class SavingsScreenState extends State<SavingsScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: const [
                 Text(
-                  AppLanguage.tr('roundups_title'),
-                  style: const TextStyle(
+                  'Round-Ups into Emergency Fund',
+                  style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
-                  AppLanguage.tr('roundups_desc'),
-                  style: const TextStyle(
+                  'Spare change auto-saved on every purchase',
+                  style: TextStyle(
                     fontSize: 11,
                     color: Color(0xFF8E4C3B),
                   ),
@@ -499,9 +482,9 @@ class SavingsScreenState extends State<SavingsScreen> {
         RichText(
           text: TextSpan(
             children: [
-              TextSpan(
-                text: '${AppLanguage.tr('your_savings_pots')} ',
-                style: const TextStyle(
+              const TextSpan(
+                text: 'Your Savings Pots ',
+                style: TextStyle(
                   fontSize: 15.5,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,
@@ -527,7 +510,7 @@ class SavingsScreenState extends State<SavingsScreen> {
             ),
             const SizedBox(width: 4),
             Text(
-              '${AppLanguage.tr('target_label')}: \$${_formatCompact(totalTarget)}',
+              'Target: \$${_formatCompact(totalTarget)}',
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -570,19 +553,19 @@ class SavingsScreenState extends State<SavingsScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          Text(
-            AppLanguage.tr('empty_pots_title'),
-            style: const TextStyle(
+          const Text(
+            'No Savings Pots Yet',
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.onSurface,
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            AppLanguage.tr('empty_pots_desc'),
+          const Text(
+            'Start saving for your dreams! Create separate pots for emergencies, travel, gadgets, or personal goals.',
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12.5,
               color: Color(0xFF757575),
               height: 1.4,
@@ -600,9 +583,9 @@ class SavingsScreenState extends State<SavingsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
             ),
             icon: const Icon(Icons.add_rounded, size: 18),
-            label: Text(
-              AppLanguage.tr('create_first_pot'),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            label: const Text(
+              'Create First Pot',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
           ),
         ],
@@ -661,9 +644,9 @@ class SavingsScreenState extends State<SavingsScreen> {
         ? const Color(0xFF006C49)
         : (percent >= 70 ? const Color(0xFF4338CA) : const Color(0xFFC2410C));
 
-    String targetDateText = AppLanguage.tr('no_date');
+    String targetDateText = 'No date';
     if (goal.targetDate != null) {
-      targetDateText = DateFormat('MMM yyyy', AppLanguage.instance.currentCode).format(goal.targetDate!);
+      targetDateText = DateFormat('MMM yyyy').format(goal.targetDate!);
     }
 
     return InkWell(
@@ -785,16 +768,12 @@ class SavingsScreenState extends State<SavingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
-                  child: Text(
-                    isCompleted ? AppLanguage.tr('goal_reached') : '\$${_formatCompact(remaining)} ${AppLanguage.tr('left_to_go')}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: isCompleted ? FontWeight.w700 : FontWeight.w500,
-                      color: isCompleted ? const Color(0xFF006C49) : const Color(0xFF757575),
-                    ),
+                Text(
+                  isCompleted ? 'Goal Reached!' : '\$${_formatCompact(remaining)} left',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isCompleted ? FontWeight.w700 : FontWeight.w500,
+                    color: isCompleted ? const Color(0xFF006C49) : const Color(0xFF757575),
                   ),
                 ),
                 if (isCompleted)
@@ -911,9 +890,9 @@ class SavingsScreenState extends State<SavingsScreen> {
                         _showTopUpDialog(goal);
                       },
                       icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                      label: Text(
-                        AppLanguage.tr('top_up_balance'),
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                      label: const Text(
+                        'Top-Up Saldo',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
                       ),
                     ),
                   ),
@@ -934,7 +913,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                       _confirmDeletePot(goal);
                     },
                     icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                    tooltip: AppLanguage.tr('delete'),
+                    tooltip: 'Hapus Pot',
                   ),
                 ],
               ),
@@ -998,7 +977,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${AppLanguage.tr('remaining')}: \$${_formatAmount(goal.remainingAmount)}',
+                      'Sisa target: \$${_formatAmount(goal.remainingAmount)}',
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: Color(0xFF757575),
@@ -1075,7 +1054,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                           final amount = double.tryParse(controller.text.trim()) ?? 0.0;
                           if (amount <= 0) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(AppLanguage.tr('enter_valid_topup'))),
+                              const SnackBar(content: Text('Masukkan nominal top-up yang valid')),
                             );
                             return;
                           }
@@ -1091,15 +1070,15 @@ class SavingsScreenState extends State<SavingsScreen> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('${AppLanguage.tr('top_up_success')} (\$${_formatAmount(amount)} -> ${goal.title})'),
+                                content: Text('Berhasil menambah \$${_formatAmount(amount)} ke ${goal.title}!'),
                                 backgroundColor: const Color(0xFF006C49),
                               ),
                             );
                           }
                         },
-                        child: Text(
-                          AppLanguage.tr('confirm_top_up_btn'),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                        child: const Text(
+                          'Konfirmasi Tambah Saldo',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -1122,17 +1101,17 @@ class SavingsScreenState extends State<SavingsScreen> {
           backgroundColor: AppColors.background,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
-            '${AppLanguage.tr('delete')} ${goal.title}?',
+            'Hapus ${goal.title}?',
             style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.onSurface),
           ),
           content: Text(
-            AppLanguage.tr('delete_pot_confirm_body'),
+            'Apakah Anda yakin ingin menghapus pot tabungan "${goal.title}"? Tindakan ini tidak dapat dibatalkan.',
             style: const TextStyle(color: Color(0xFF757575), fontSize: 13),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text(AppLanguage.tr('cancel'), style: const TextStyle(color: Color(0xFF757575))),
+              child: const Text('Batal', style: TextStyle(color: Color(0xFF757575))),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -1147,12 +1126,12 @@ class SavingsScreenState extends State<SavingsScreen> {
                   await loadData();
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLanguage.tr('pot_deleted_toast'))),
+                      SnackBar(content: Text('Pot "${goal.title}" berhasil dihapus.')),
                     );
                   }
                 }
               },
-              child: Text(AppLanguage.tr('delete'), style: const TextStyle(fontWeight: FontWeight.w700)),
+              child: const Text('Hapus', style: TextStyle(fontWeight: FontWeight.w700)),
             ),
           ],
         );
@@ -1227,9 +1206,9 @@ class SavingsScreenState extends State<SavingsScreen> {
                     const SizedBox(height: 12),
 
                     // Emoji Selector
-                    Text(
-                      AppLanguage.tr('select_emoji_icon'),
-                      style: const TextStyle(
+                    const Text(
+                      'PILIH EMOJI / IKON',
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
@@ -1281,8 +1260,8 @@ class SavingsScreenState extends State<SavingsScreen> {
                     TextField(
                       controller: titleController,
                       decoration: InputDecoration(
-                        labelText: AppLanguage.tr('pot_name_dream'),
-                        hintText: AppLanguage.tr('pot_name_hint'),
+                        labelText: 'Nama Tabungan / Impian',
+                        hintText: 'mis. Liburan ke Bali, MacBook Pro',
                         filled: true,
                         fillColor: const Color(0xFFFAF2EB),
                         border: OutlineInputBorder(
@@ -1309,9 +1288,8 @@ class SavingsScreenState extends State<SavingsScreen> {
                             controller: targetController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             decoration: InputDecoration(
-                              labelText: AppLanguage.tr('target_short'),
+                              labelText: 'Target Total (\$)',
                               hintText: '500.00',
-                              isDense: true,
                               filled: true,
                               fillColor: const Color(0xFFFAF2EB),
                               border: OutlineInputBorder(
@@ -1335,9 +1313,8 @@ class SavingsScreenState extends State<SavingsScreen> {
                             controller: initialController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             decoration: InputDecoration(
-                              labelText: AppLanguage.tr('initial_short'),
+                              labelText: 'Saldo Awal (\$)',
                               hintText: '0.00',
-                              isDense: true,
                               filled: true,
                               fillColor: const Color(0xFFFAF2EB),
                               border: OutlineInputBorder(
@@ -1390,8 +1367,8 @@ class SavingsScreenState extends State<SavingsScreen> {
                             Expanded(
                               child: Text(
                                 selectedDate != null
-                                    ? '${AppLanguage.tr('target_finish_date')}: ${DateFormat('d MMMM yyyy', AppLanguage.instance.currentCode).format(selectedDate!)}'
-                                    : AppLanguage.tr('select_target_date_optional'),
+                                    ? 'Target Selesai: ${DateFormat('d MMMM yyyy').format(selectedDate!)}'
+                                    : 'Pilih Target Tanggal (Opsional)',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: selectedDate != null ? AppColors.onSurface : const Color(0xFF757575),
@@ -1434,14 +1411,14 @@ class SavingsScreenState extends State<SavingsScreen> {
 
                           if (title.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(AppLanguage.tr('pot_name_empty_toast'))),
+                              const SnackBar(content: Text('Nama tabungan tidak boleh kosong')),
                             );
                             return;
                           }
 
                           if (target <= 0) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(AppLanguage.tr('target_must_be_positive'))),
+                              const SnackBar(content: Text('Target nominal harus lebih besar dari 0')),
                             );
                             return;
                           }
@@ -1465,15 +1442,15 @@ class SavingsScreenState extends State<SavingsScreen> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Pot "$title" ${AppLanguage.tr('pot_created_toast')}'),
+                                content: Text('Pot "$title" berhasil dibuat!'),
                                 backgroundColor: const Color(0xFF006C49),
                               ),
                             );
                           }
                         },
-                        child: Text(
-                          AppLanguage.tr('save_target_pot'),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                        child: const Text(
+                          'Simpan Target Pot',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),

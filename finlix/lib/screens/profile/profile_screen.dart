@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/localization/app_language.dart';
 import '../../models/transaction_model.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -113,12 +112,12 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
-          children: [
-            const Icon(Icons.edit_note_rounded, color: AppColors.primary),
-            const SizedBox(width: 8),
+          children: const [
+            Icon(Icons.edit_note_rounded, color: AppColors.primary),
+            SizedBox(width: 8),
             Text(
-              AppLanguage.tr('edit_profile_title'),
-              style: const TextStyle(
+              'Edit Profil Pengguna',
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
@@ -133,7 +132,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: nameCtrl,
                 decoration: InputDecoration(
-                  labelText: AppLanguage.tr('full_name'),
+                  labelText: 'Nama Lengkap',
                   filled: true,
                   fillColor: const Color(0xFFFAF1E8),
                   border: OutlineInputBorder(
@@ -146,7 +145,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: handleCtrl,
                 decoration: InputDecoration(
-                  labelText: AppLanguage.tr('username_handle'),
+                  labelText: 'Username / Handle',
                   filled: true,
                   fillColor: const Color(0xFFFAF1E8),
                   border: OutlineInputBorder(
@@ -175,7 +174,7 @@ class ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLanguage.tr('cancel'), style: const TextStyle(color: Color(0xFF757575))),
+            child: const Text('Batal', style: TextStyle(color: Color(0xFF757575))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -200,15 +199,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
                   messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(AppLanguage.tr('profile_updated_toast')),
-                      backgroundColor: const Color(0xFF006C49),
+                    const SnackBar(
+                      content: Text('Profil berhasil diperbarui!'),
+                      backgroundColor: Color(0xFF006C49),
                     ),
                   );
                 }
               }
             },
-            child: Text(AppLanguage.tr('save'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -260,9 +259,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        AppLanguage.tr('set_budget_title'),
-                        style: const TextStyle(
+                      const Text(
+                        'Batas Anggaran Bulanan',
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: AppColors.onSurface,
@@ -278,9 +277,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    AppLanguage.tr('set_budget_desc'),
-                    style: const TextStyle(
+                  const Text(
+                    'Tetapkan batas limit belanja bulanan. FinLix akan memberikan indikator visual saat mendekati batas ini.',
+                    style: TextStyle(
                       fontSize: 12.5,
                       color: Color(0xFF757575),
                       height: 1.3,
@@ -324,7 +323,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
-                      labelText: AppLanguage.tr('budget_amount'),
+                      labelText: 'Nominal Batas Anggaran',
                       filled: true,
                       fillColor: const Color(0xFFFAF1E8),
                       border: OutlineInputBorder(
@@ -356,16 +355,16 @@ class ProfileScreenState extends State<ProfileScreen> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('${AppLanguage.tr('budget_saved_toast')}: \$${_formatAmount(parsed)}!'),
+                                content: Text('Batas anggaran bulanan berhasil disimpan: \$${_formatAmount(parsed)}!'),
                                 backgroundColor: const Color(0xFF006C49),
                               ),
                             );
                           }
                         }
                       },
-                      child: Text(
-                        AppLanguage.tr('save_budget'),
-                        style: const TextStyle(
+                      child: const Text(
+                        'Simpan Anggaran',
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -387,8 +386,8 @@ class ProfileScreenState extends State<ProfileScreen> {
   // --- Modal Pemilih Mata Uang Utama ---
   void _showCurrencyPicker() {
     final currencies = [
-      {'code': 'USD (\$)', 'desc': AppLanguage.tr('currency_usd_desc')},
-      {'code': 'IDR (Rp)', 'desc': AppLanguage.tr('currency_idr_desc')},
+      {'code': 'USD (\$)', 'desc': 'Dolar Amerika Serikat (Default)'},
+      {'code': 'IDR (Rp)', 'desc': 'Rupiah Indonesia'},
     ];
 
     showModalBottomSheet(
@@ -420,260 +419,86 @@ class ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              Text(
-                AppLanguage.tr('select_currency_title'),
-                style: const TextStyle(
+              const Text(
+                'Pilih Mata Uang Utama',
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                AppLanguage.tr('select_currency_desc'),
-                style: const TextStyle(fontSize: 12, color: Color(0xFF757575)),
+              const Text(
+                'Mata uang default yang digunakan untuk menampilkan laporan saldo dan transaksi.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF757575)),
               ),
-              const SizedBox(height: 16),
-              ...currencies.map((curr) {
-                final isSelected = _currency == curr['code'];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: InkWell(
-                    onTap: () async {
-                      final selectedCode = curr['code']!;
-                      final messenger = ScaffoldMessenger.of(context);
-                      if (ctx.mounted) Navigator.pop(ctx);
-                      setState(() {
-                        _currency = selectedCode;
-                      });
-                      await DbHelper.instance.setSetting('currency', selectedCode);
-                      await loadData();
-                      if (mounted) {
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text('${AppLanguage.tr('currency_changed_toast')} $selectedCode'),
-                            backgroundColor: const Color(0xFF006C49),
-                            duration: const Duration(seconds: 2),
+              const SizedBox(height: 14),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: currencies.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFEFE6DD)),
+                  itemBuilder: (context, index) {
+                    final curr = currencies[index];
+                    final isSelected = _currency == curr['code'];
+                    return Material(
+                      color: Colors.transparent,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        leading: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFD4EFE1) : const Color(0xFFFAF1E8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFFE8F7EE) : const Color(0xFFFAF1E8),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? const Color(0xFF006C49) : const Color(0xFFEFE6DD),
-                          width: isSelected ? 1.6 : 1.0,
+                          child: Icon(
+                            Icons.monetization_on_outlined,
+                            color: isSelected ? const Color(0xFF006C49) : const Color(0xFF6E7A72),
+                            size: 22,
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: isSelected ? const Color(0xFFD4EFE1) : const Color(0xFFF3E7DC),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.monetization_on_outlined,
-                              color: isSelected ? const Color(0xFF006C49) : const Color(0xFF6E7A72),
-                              size: 22,
-                            ),
+                        title: Text(
+                          curr['code']!,
+                          style: TextStyle(
+                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                            color: isSelected ? const Color(0xFF006C49) : AppColors.onSurface,
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  curr['code']!,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                    color: isSelected ? const Color(0xFF006C49) : AppColors.onSurface,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  curr['desc']!,
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF757575)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isSelected)
-                            const Icon(
-                              Icons.check_circle_rounded,
-                              color: Color(0xFF006C49),
-                              size: 24,
-                            )
-                          else
-                            Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFFD8C7BA), width: 1.5),
+                        ),
+                        subtitle: Text(
+                          curr['desc']!,
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF757575)),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(Icons.check_circle_rounded, color: Color(0xFF006C49), size: 24)
+                            : null,
+                        onTap: () async {
+                          final selectedCode = curr['code']!;
+                          final messenger = ScaffoldMessenger.of(context);
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          setState(() {
+                            _currency = selectedCode;
+                          });
+                          await DbHelper.instance.setSetting('currency', selectedCode);
+                          await loadData();
+                          if (mounted) {
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('Mata uang utama diubah ke $selectedCode'),
+                                backgroundColor: const Color(0xFF006C49),
+                                duration: const Duration(seconds: 2),
                               ),
-                            ),
-                        ],
+                            );
+                          }
+                        },
                       ),
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // --- Modal Pemilih Bahasa Aplikasi ---
-  void _showLanguagePicker() {
-    final languages = [
-      {'code': 'id', 'name': 'Bahasa Indonesia', 'desc': 'Bahasa Indonesia (Default)'},
-      {'code': 'en', 'name': 'English', 'desc': 'English (United States)'},
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => SafeArea(
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.75,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD8C7BA),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                    );
+                  },
                 ),
               ),
-              const SizedBox(height: 18),
-              Text(
-                AppLanguage.tr('select_language_title'),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.onSurface,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                AppLanguage.tr('select_language_desc'),
-                style: const TextStyle(fontSize: 12, color: Color(0xFF757575)),
-              ),
-              const SizedBox(height: 16),
-              ...languages.map((lang) {
-                final isSelected = AppLanguage.instance.currentCode == lang['code'];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: InkWell(
-                    onTap: () async {
-                      final selectedCode = lang['code']!;
-                      final messenger = ScaffoldMessenger.of(context);
-                      if (ctx.mounted) Navigator.pop(ctx);
-                      await AppLanguage.instance.setLanguage(selectedCode);
-                      if (mounted) {
-                        setState(() {});
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text('${AppLanguage.tr('language_changed_toast')} ${lang['name']}'),
-                            backgroundColor: const Color(0xFF006C49),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFFE8F7EE) : const Color(0xFFFAF1E8),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? const Color(0xFF006C49) : const Color(0xFFEFE6DD),
-                          width: isSelected ? 1.6 : 1.0,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: isSelected ? const Color(0xFFD4EFE1) : const Color(0xFFF3E7DC),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.translate_rounded,
-                              color: isSelected ? const Color(0xFF006C49) : const Color(0xFF6E7A72),
-                              size: 22,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  lang['name']!,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                    color: isSelected ? const Color(0xFF006C49) : AppColors.onSurface,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  lang['desc']!,
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF757575)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isSelected)
-                            const Icon(
-                              Icons.check_circle_rounded,
-                              color: Color(0xFF006C49),
-                              size: 24,
-                            )
-                          else
-                            Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFFD8C7BA), width: 1.5),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
             ],
           ),
         ),
@@ -715,18 +540,18 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                Text(
-                  AppLanguage.tr('salary_day_title'),
-                  style: const TextStyle(
+                const Text(
+                  'Awal Periode / Tanggal Gajian',
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  AppLanguage.tr('salary_day_instruction'),
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF757575)),
+                const Text(
+                  'Siklus perhitungan anggaran bulanan akan di-reset pada tanggal yang Anda tentukan.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF757575)),
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -735,7 +560,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   children: days.map((day) {
                     final isSelected = _salaryDay == day;
                     return ChoiceChip(
-                      label: Text(AppLanguage.instance.isIndonesian ? 'Tanggal $day' : 'Day $day'),
+                      label: Text('Tanggal $day'),
                       selected: isSelected,
                       selectedColor: const Color(0xFFD4EFE1),
                       backgroundColor: const Color(0xFFFAF1E8),
@@ -759,11 +584,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text(
-                                  AppLanguage.instance.isIndonesian
-                                      ? 'Siklus gajian diatur ke tanggal $day tiap bulan.'
-                                      : 'Salary cycle set to day $day monthly.',
-                                ),
+                                content: Text('Siklus gajian diatur ke tanggal $day tiap bulan.'),
                                 backgroundColor: const Color(0xFF006C49),
                               ),
                             );
@@ -791,12 +612,12 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
-          children: [
-            const Icon(Icons.lock_outline_rounded, color: AppColors.primary),
-            const SizedBox(width: 8),
+          children: const [
+            Icon(Icons.lock_outline_rounded, color: AppColors.primary),
+            SizedBox(width: 8),
             Text(
-              AppLanguage.tr('change_pin_title'),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              'Ganti PIN Keamanan',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
           ],
         ),
@@ -804,9 +625,9 @@ class ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              AppLanguage.tr('change_pin_instruction'),
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF757575)),
+            const Text(
+              'Masukkan 6 angka PIN baru untuk memproteksi dompet FinLix Anda saat dibuka:',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF757575)),
             ),
             const SizedBox(height: 14),
             TextField(
@@ -816,7 +637,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               maxLength: 6,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.pin_rounded, color: AppColors.primary),
-                labelText: AppLanguage.tr('pin_field_label'),
+                labelText: 'PIN 6 Digit',
                 filled: true,
                 fillColor: const Color(0xFFFAF1E8),
                 border: OutlineInputBorder(
@@ -830,7 +651,7 @@ class ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLanguage.tr('cancel'), style: const TextStyle(color: Color(0xFF757575))),
+            child: const Text('Batal', style: TextStyle(color: Color(0xFF757575))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -844,15 +665,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
                   messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(AppLanguage.tr('pin_saved_toast')),
-                      backgroundColor: const Color(0xFF006C49),
+                    const SnackBar(
+                      content: Text('PIN keamanan 6 digit berhasil diaktifkan!'),
+                      backgroundColor: Color(0xFF006C49),
                     ),
                   );
                 }
               }
             },
-            child: Text(AppLanguage.tr('save_pin_btn'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Simpan PIN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -892,12 +713,12 @@ class ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 18),
             Row(
-              children: [
-                const Icon(Icons.file_download_outlined, color: Color(0xFF006C49), size: 24),
-                const SizedBox(width: 8),
+              children: const [
+                Icon(Icons.file_download_outlined, color: Color(0xFF006C49), size: 24),
+                SizedBox(width: 8),
                 Text(
-                  AppLanguage.tr('backup_export_title'),
-                  style: const TextStyle(
+                  'Backup & Ekspor Data',
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -906,9 +727,9 @@ class ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              AppLanguage.tr('backup_export_desc_full'),
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF757575), height: 1.3),
+            const Text(
+              'Semua catatan transaksi dan target kantong tabungan Anda tersimpan secara offline di database SQLite lokal.',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF757575), height: 1.3),
             ),
             const SizedBox(height: 16),
             Container(
@@ -923,24 +744,24 @@ class ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppLanguage.tr('total_stored_tx'), style: const TextStyle(fontSize: 12.5, color: Color(0xFF757575))),
-                      Text('$_totalTransactionsCount ${AppLanguage.instance.isIndonesian ? "Data" : "Records"}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Total Transaksi Tersimpan:', style: TextStyle(fontSize: 12.5, color: Color(0xFF757575))),
+                      Text('$_totalTransactionsCount Data', style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppLanguage.tr('active_pots_count_label'), style: const TextStyle(fontSize: 12.5, color: Color(0xFF757575))),
-                      Text('$_activePotsCount ${AppLanguage.instance.isIndonesian ? "Kantong" : "Pots"}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Kantong Tabungan Aktif:', style: TextStyle(fontSize: 12.5, color: Color(0xFF757575))),
+                      Text('$_activePotsCount Kantong', style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(AppLanguage.tr('security_status_label'), style: const TextStyle(fontSize: 12.5, color: Color(0xFF757575))),
-                      Text(AppLanguage.tr('locally_encrypted'), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006C49))),
+                    children: const [
+                      Text('Status Keamanan:', style: TextStyle(fontSize: 12.5, color: Color(0xFF757575))),
+                      Text('Terenkripsi Lokal', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006C49))),
                     ],
                   ),
                 ],
@@ -956,16 +777,16 @@ class ProfileScreenState extends State<ProfileScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 icon: const Icon(Icons.cloud_download_outlined, color: Colors.white, size: 20),
-                label: Text(
-                  AppLanguage.tr('export_csv_btn'),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                label: const Text(
+                  'Ekspor Ringkasan CSV',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 onPressed: () {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(AppLanguage.tr('export_csv_toast')),
-                      backgroundColor: const Color(0xFF006C49),
+                    const SnackBar(
+                      content: Text('Ringkasan data berhasil disiapkan untuk diunduh!'),
+                      backgroundColor: Color(0xFF006C49),
                     ),
                   );
                 },
@@ -1007,12 +828,12 @@ class ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 18),
             Row(
-              children: [
-                const Icon(Icons.help_outline_rounded, color: Color(0xFF006C49)),
-                const SizedBox(width: 8),
+              children: const [
+                Icon(Icons.help_outline_rounded, color: Color(0xFF006C49)),
+                SizedBox(width: 8),
                 Text(
-                  AppLanguage.tr('faq_help_label'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  'Pusat Bantuan & FAQ',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -1020,38 +841,22 @@ class ProfileScreenState extends State<ProfileScreen> {
             Expanded(
               child: ListView(
                 physics: const BouncingScrollPhysics(),
-                children: [
+                children: const [
                   _FaqTile(
-                    question: AppLanguage.instance.isIndonesian
-                        ? 'Bagaimana cara mengatur batas anggaran bulanan?'
-                        : 'How to set a monthly spending budget?',
-                    answer: AppLanguage.instance.isIndonesian
-                        ? 'Buka tab Profile > Pengaturan Finansial > Batas Anggaran Bulanan. Pilih nominal cepat atau ketik target budget bulanan yang Anda inginkan.'
-                        : 'Open Profile tab > Financial Settings > Monthly Budget. Choose a quick preset or type your custom monthly limit.',
+                    question: 'Bagaimana cara mengatur batas anggaran bulanan?',
+                    answer: 'Buka tab Profile > Pengaturan Finansial > Batas Anggaran Bulanan. Pilih nominal cepat atau ketik target budget bulanan yang Anda inginkan.',
                   ),
                   _FaqTile(
-                    question: AppLanguage.instance.isIndonesian
-                        ? 'Apakah data FinLix aman?'
-                        : 'Is my data safe on FinLix?',
-                    answer: AppLanguage.instance.isIndonesian
-                        ? 'Sangat aman! FinLix menggunakan pendekatan Offline-First dengan database SQLite lokal. Tidak ada data pribadi atau nominal saldo Anda yang dikirim ke server luar.'
-                        : '100% private! FinLix employs an Offline-First approach with local SQLite storage. No balance or transaction details ever leave your device.',
+                    question: 'Apakah data FinLix aman?',
+                    answer: 'Sangat aman! FinLix menggunakan pendekatan Offline-First dengan database SQLite lokal. Tidak ada data pribadi atau nominal saldo Anda yang dikirim ke server luar.',
                   ),
                   _FaqTile(
-                    question: AppLanguage.instance.isIndonesian
-                        ? 'Bagaimana cara kerja Kantong (Pots)?'
-                        : 'How do Savings Pots work?',
-                    answer: AppLanguage.instance.isIndonesian
-                        ? 'Kantong memungkinkan Anda menyisihkan dana untuk tujuan khusus (misal liburan atau dana darurat) terpisah dari saldo harian.'
-                        : 'Pots let you separate savings goals (vacation, emergency fund, gadgets) from your daily spending cash.',
+                    question: 'Bagaimana cara kerja Kantong (Pots)?',
+                    answer: 'Kantong memungkinkan Anda menyisihkan dana untuk tujuan khusus (misal liburan atau dana darurat) terpisah dari saldo harian.',
                   ),
                   _FaqTile(
-                    question: AppLanguage.instance.isIndonesian
-                        ? 'Apakah saya bisa mengubah tanggal siklus gajian?'
-                        : 'Can I change my salary cycle date?',
-                    answer: AppLanguage.instance.isIndonesian
-                        ? 'Bisa! Buka opsi "Awal Periode / Gajian" di profil Anda, lalu tentukan tanggal gajian Anda untuk me-reset grafik bulanan secara otomatis.'
-                        : 'Yes! Tap "Salary Day / Cycle" in your profile and select your payday to automatically reset monthly analytics.',
+                    question: 'Apakah saya bisa mengubah tanggal siklus gajian?',
+                    answer: 'Bisa! Buka opsi "Awal Periode / Gajian" di profil Anda, lalu tentukan tanggal gajian Anda untuk me-reset grafik bulanan secara otomatis.',
                   ),
                 ],
               ),
@@ -1070,15 +875,15 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
-          children: [
-            const Icon(Icons.shield_outlined, color: AppColors.primary),
-            const SizedBox(width: 8),
-            Text(AppLanguage.tr('privacy_policy_title'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+          children: const [
+            Icon(Icons.shield_outlined, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('Kebijakan Privasi', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
           ],
         ),
-        content: Text(
-          AppLanguage.tr('privacy_policy_body'),
-          style: const TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF6E7A72)),
+        content: const Text(
+          'FinLix dibangun dengan prinsip Privasi Mutlak (Zero-Knowledge / Offline-First). Seluruh data keuangan, transaksi, dan target kantong disimpan secara eksklusif pada penyimpanan lokal perangkat Anda via SQLite.\n\nKami tidak melacak riwayat transaksi Anda atau menjual data kepada pihak ketiga.',
+          style: TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF6E7A72)),
         ),
         actions: [
           ElevatedButton(
@@ -1087,7 +892,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLanguage.tr('understood_btn'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Mengerti', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1102,20 +907,20 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
-          children: [
-            const Icon(Icons.logout_rounded, color: Color(0xFFBD382B)),
-            const SizedBox(width: 8),
-            Text(AppLanguage.tr('logout_confirm_title'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+          children: const [
+            Icon(Icons.logout_rounded, color: Color(0xFFBD382B)),
+            SizedBox(width: 8),
+            Text('Keluar Akun FinLix?', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
           ],
         ),
-        content: Text(
-          AppLanguage.tr('logout_confirm_desc'),
-          style: const TextStyle(fontSize: 13, color: Color(0xFF757575), height: 1.3),
+        content: const Text(
+          'Sesi profil aktif Anda akan ditutup. Tenang saja, semua catatan transaksi dan tabungan SQLite tetap aman tersimpan di perangkat ini.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF757575), height: 1.3),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLanguage.tr('cancel'), style: const TextStyle(color: Color(0xFF757575))),
+            child: const Text('Batal', style: TextStyle(color: Color(0xFF757575))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1125,13 +930,13 @@ class ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(AppLanguage.tr('logout_success_toast')),
-                  backgroundColor: const Color(0xFFBD382B),
+                const SnackBar(
+                  content: Text('Berhasil keluar dari akun lokal.'),
+                  backgroundColor: Color(0xFFBD382B),
                 ),
               );
             },
-            child: Text(AppLanguage.tr('logout_button'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Keluar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1171,8 +976,8 @@ class ProfileScreenState extends State<ProfileScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
+              children: const [
+                Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -1182,8 +987,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Text(
-                  AppLanguage.tr('nav_profile'),
-                  style: const TextStyle(
+                  'Profile',
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -1258,12 +1063,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 20),
 
                       // Section 1: AKUN & KEAMANAN
-                      _buildSectionTitle(AppLanguage.tr('sec_account_security')),
+                      _buildSectionTitle('AKUN & KEAMANAN'),
                       const SizedBox(height: 8),
                       _buildGroupCard([
                         _buildSettingsTile(
                           icon: Icons.mail_outline_rounded,
-                          title: AppLanguage.tr('registered_email'),
+                          title: 'Email Terdaftar',
                           subtitle: _userEmail,
                           onTap: _showEditProfileDialog,
                           trailing: Row(
@@ -1275,9 +1080,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   color: const Color(0xFFD4EFE1),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: Text(
-                                  AppLanguage.tr('verified_badge'),
-                                  style: const TextStyle(
+                                child: const Text(
+                                  'Terverifikasi',
+                                  style: TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w700,
                                     color: Color(0xFF006C49),
@@ -1291,8 +1096,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                         ),
                         _buildSwitchTile(
                           icon: Icons.fingerprint_rounded,
-                          title: AppLanguage.tr('biometric_face_id'),
-                          subtitle: AppLanguage.tr('biometric_secure_desc'),
+                          title: 'Kunci Biometrik / Face ID',
+                          subtitle: 'Amankan dompet saat dibuka',
                           value: _isBiometricEnabled,
                           onChanged: (val) async {
                             setState(() => _isBiometricEnabled = val);
@@ -1301,8 +1106,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                         ),
                         _buildSettingsTile(
                           icon: Icons.password_rounded,
-                          title: AppLanguage.tr('change_finlix_pin'),
-                          subtitle: AppLanguage.tr('pin_security_desc'),
+                          title: 'Ganti PIN FinLix',
+                          subtitle: '6 digit keamanan transaksi',
                           onTap: _showChangePinDialog,
                           trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF8E9A92)),
                         ),
@@ -1310,14 +1115,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 20),
 
                       // Section 2: PENGATURAN FINANSIAL
-                      _buildSectionTitle(AppLanguage.tr('sec_financial_settings')),
+                      _buildSectionTitle('PENGATURAN FINANSIAL'),
                       const SizedBox(height: 8),
                       _buildGroupCard([
                         // Batas Anggaran Bulanan
                         _buildSettingsTile(
                           icon: Icons.savings_outlined,
-                          title: AppLanguage.tr('monthly_budget_label'),
-                          subtitle: AppLanguage.tr('monthly_budget_sub'),
+                          title: 'Batas Anggaran Bulanan',
+                          subtitle: 'Target maksimal belanja per bulan',
                           onTap: _showMonthlyBudgetBottomSheet,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1338,8 +1143,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                         // Mata Uang Utama
                         _buildSettingsTile(
                           icon: Icons.payments_outlined,
-                          title: AppLanguage.tr('main_currency_label'),
-                          subtitle: AppLanguage.tr('currency_sub'),
+                          title: 'Mata Uang Utama',
+                          subtitle: 'Format penulisan saldo',
                           onTap: _showCurrencyPicker,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1360,16 +1165,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                         // Awal Periode / Gajian
                         _buildSettingsTile(
                           icon: Icons.calendar_month_outlined,
-                          title: AppLanguage.tr('salary_period_label'),
-                          subtitle: AppLanguage.tr('salary_period_sub'),
+                          title: 'Awal Periode / Gajian',
+                          subtitle: 'Reset anggaran bulanan',
                           onTap: _showSalaryDayPicker,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                AppLanguage.instance.isIndonesian
-                                    ? 'Tgl $_salaryDay Tiap\nBulan'
-                                    : 'Day $_salaryDay\nMonthly',
+                                'Tgl $_salaryDay Tiap\nBulan',
                                 textAlign: TextAlign.right,
                                 style: const TextStyle(
                                   fontSize: 11.5,
@@ -1385,8 +1188,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                         ),
                         _buildSwitchTile(
                           icon: Icons.notifications_active_outlined,
-                          title: AppLanguage.tr('budget_alert_label'),
-                          subtitle: AppLanguage.tr('budget_alert_sub'),
+                          title: 'Peringatan Budget 80%',
+                          subtitle: 'Notif santai saat mendekati batas',
                           value: _isBudgetAlertEnabled,
                           onChanged: (val) async {
                             setState(() => _isBudgetAlertEnabled = val);
@@ -1396,41 +1199,19 @@ class ProfileScreenState extends State<ProfileScreen> {
                       ]),
                       const SizedBox(height: 20),
 
-                      // Section 3: PREFERENSI & TAMPILAN
-                      _buildSectionTitle(AppLanguage.tr('sec_preferences_display')),
+                      // Section 3: KUSTOMISASI & TAMPILAN
+                      _buildSectionTitle('KUSTOMISASI & TAMPILAN'),
                       const SizedBox(height: 8),
                       _buildGroupCard([
-                        // Bahasa Aplikasi / App Language
-                        _buildSettingsTile(
-                          icon: Icons.language_rounded,
-                          title: AppLanguage.tr('app_language'),
-                          subtitle: AppLanguage.tr('app_language_desc'),
-                          onTap: _showLanguagePicker,
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                AppLanguage.instance.isIndonesian ? 'Indonesia' : 'English',
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.onSurface,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF8E9A92)),
-                            ],
-                          ),
-                        ),
                         _buildSettingsTile(
                           icon: Icons.palette_outlined,
-                          title: AppLanguage.tr('theme_label'),
-                          subtitle: AppLanguage.tr('theme_sub'),
+                          title: 'Tema Aplikasi',
+                          subtitle: 'Nuansa visual antarmuka',
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(AppLanguage.tr('theme_snack')),
-                                backgroundColor: const Color(0xFF006C49),
+                              const SnackBar(
+                                content: Text('Tema Warm Peach aktif secara default untuk kenyamanan mata.'),
+                                backgroundColor: Color(0xFF006C49),
                               ),
                             );
                           },
@@ -1474,8 +1255,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                         ),
                         _buildSwitchTile(
                           icon: Icons.vibration_rounded,
-                          title: AppLanguage.tr('haptics_touch_label'),
-                          subtitle: AppLanguage.tr('haptics_touch_sub'),
+                          title: 'Sentuhan Haptik & Suara',
+                          subtitle: 'Sensasi klik koin kerikil',
                           value: _isHapticsEnabled,
                           onChanged: (val) async {
                             setState(() => _isHapticsEnabled = val);
@@ -1486,27 +1267,27 @@ class ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 20),
 
                       // Section 4: DATA & BANTUAN
-                      _buildSectionTitle(AppLanguage.tr('sec_data_help')),
+                      _buildSectionTitle('DATA & BANTUAN'),
                       const SizedBox(height: 8),
                       _buildGroupCard([
                         _buildSettingsTile(
                           icon: Icons.file_download_outlined,
-                          title: AppLanguage.tr('backup_export_label'),
-                          subtitle: AppLanguage.tr('backup_export_sub'),
+                          title: 'Backup & Ekspor Data',
+                          subtitle: 'Unduh riwayat transaksi offline SQLite',
                           onTap: _showExportDataModal,
                           trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF8E9A92)),
                         ),
                         _buildSettingsTile(
                           icon: Icons.help_outline_rounded,
-                          title: AppLanguage.tr('faq_help_label'),
-                          subtitle: AppLanguage.tr('faq_help_sub'),
+                          title: 'Pusat Bantuan & FAQ',
+                          subtitle: 'Panduan penggunaan & tips hemat',
                           onTap: _showFaqModal,
                           trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF8E9A92)),
                         ),
                         _buildSettingsTile(
                           icon: Icons.shield_outlined,
-                          title: AppLanguage.tr('privacy_policy_label'),
-                          subtitle: AppLanguage.tr('privacy_policy_sub'),
+                          title: 'Kebijakan Privasi',
+                          subtitle: 'Enkripsi data pribadi offline-first',
                           onTap: _showPrivacyModal,
                           trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF8E9A92)),
                         ),
@@ -1628,7 +1409,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$_userHandle • ${AppLanguage.tr('member_badge')}',
+                      '$_userHandle • FinLix Member',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -1667,16 +1448,16 @@ class ProfileScreenState extends State<ProfileScreen> {
             children: [
               Expanded(
                 child: _buildStatBox(
-                  value: '$_activePotsCount ${_activePotsCount == 1 ? AppLanguage.tr('pot_unit_single') : AppLanguage.tr('pots_unit')}',
-                  label: AppLanguage.tr('active_pots_stat'),
+                  value: '$_activePotsCount Kantong',
+                  label: 'Pots Aktif',
                   valueColor: AppColors.onSurface,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildStatBox(
-                  value: '142 ${AppLanguage.tr('days_unit')}',
-                  label: AppLanguage.tr('saving_streak_label'),
+                  value: '142 Hari',
+                  label: 'Streak Hemat',
                   valueColor: AppColors.onSurface,
                 ),
               ),
@@ -1684,7 +1465,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               Expanded(
                 child: _buildStatBox(
                   value: '$_savingsScore%',
-                  label: AppLanguage.tr('budget_score_label'),
+                  label: 'Skor Budget',
                   valueColor: const Color(0xFF006C49),
                 ),
               ),
@@ -1701,7 +1482,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     required Color valueColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF1E8),
         borderRadius: BorderRadius.circular(16),
@@ -1712,29 +1493,21 @@ class ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w800,
-                color: valueColor,
-              ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w800,
+              color: valueColor,
             ),
           ),
           const SizedBox(height: 2),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              label,
-              maxLines: 1,
-              style: const TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF757575),
-              ),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF757575),
             ),
           ),
         ],
@@ -1772,19 +1545,19 @@ class ProfileScreenState extends State<ProfileScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: const [
                 Text(
-                  AppLanguage.tr('plus_active'),
-                  style: const TextStyle(
+                  'FinLix Plus Aktif',
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
-                  AppLanguage.tr('plus_desc'),
-                  style: const TextStyle(
+                  'Auto-kategorisasi & database offline SQLite',
+                  style: TextStyle(
                     fontSize: 11,
                     color: Color(0xFF757575),
                   ),
@@ -1997,16 +1770,16 @@ class ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
+        children: const [
+          Icon(
             Icons.logout_rounded,
             color: Color(0xFFBD382B),
             size: 20,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
-            AppLanguage.tr('logout_button'),
-            style: const TextStyle(
+            'Keluar Akun',
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Color(0xFFBD382B),
@@ -2020,8 +1793,8 @@ class ProfileScreenState extends State<ProfileScreen> {
   Widget _buildFooterInfo() {
     return Center(
       child: Column(
-        children: [
-          const Text(
+        children: const [
+          Text(
             'FinLix v2.4.0 (Flutter Release)',
             style: TextStyle(
               fontSize: 11,
@@ -2029,10 +1802,10 @@ class ProfileScreenState extends State<ProfileScreen> {
               color: Color(0xFF8E9A92),
             ),
           ),
-          const SizedBox(height: 3),
+          SizedBox(height: 3),
           Text(
-            AppLanguage.tr('footer_peace'),
-            style: const TextStyle(
+            'Dibuat dengan rasa tenang untuk finansialmu',
+            style: TextStyle(
               fontSize: 11,
               color: Color(0xFF8E9A92),
             ),

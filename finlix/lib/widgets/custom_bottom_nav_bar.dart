@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../core/localization/app_language.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -40,24 +39,24 @@ class CustomBottomNavBar extends StatelessWidget {
             children: [
               _buildNavItem(
                 index: 0,
-                label: AppLanguage.tr('nav_home'),
+                label: 'Home',
                 icon: Icons.account_balance_wallet_rounded,
               ),
               _buildNavItem(
                 index: 1,
-                label: AppLanguage.tr('nav_analytics'),
+                label: 'Analytics',
                 icon: Icons.bar_chart_rounded,
               ),
               _buildAddButton(),
               _buildNavItem(
                 index: 2,
-                label: AppLanguage.tr('nav_pots'),
+                label: 'Pots',
                 icon: Icons.savings_outlined,
                 selectedIcon: Icons.savings_rounded,
               ),
               _buildNavItem(
                 index: 3,
-                label: AppLanguage.tr('nav_profile'),
+                label: 'Profile',
                 icon: Icons.person_outline_rounded,
                 selectedIcon: Icons.person_rounded,
               ),
@@ -105,8 +104,6 @@ class CustomBottomNavBar extends StatelessWidget {
             const SizedBox(height: 3),
             Text(
               label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: isSelected ? activeColor : inactiveColor,
                 fontSize: 11,

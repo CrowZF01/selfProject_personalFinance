@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/localization/app_language.dart';
 import '../../models/transaction_model.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -84,23 +83,10 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
     final double balance = totalIncome - totalExpense;
 
-    // Group transactions by Date String
+    // Group transactions by Date String (e.g. '16 Sept Wednesday')
     final Map<String, List<TransactionModel>> grouped = {};
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-
     for (var tx in filteredTransactions) {
-      final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
-      final String dateKey;
-      if (txDate == today) {
-        dateKey = AppLanguage.tr('today');
-      } else if (txDate == yesterday) {
-        dateKey = AppLanguage.tr('yesterday');
-      } else {
-        dateKey = DateFormat('d MMM, EEEE').format(tx.date);
-      }
-
+      final dateKey = DateFormat('d MMM EEEE').format(tx.date);
       if (!grouped.containsKey(dateKey)) {
         grouped[dateKey] = [];
       }
@@ -138,8 +124,8 @@ class DashboardScreenState extends State<DashboardScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
+              children: const [
+                Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -149,8 +135,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 Text(
-                  AppLanguage.tr('nav_home'),
-                  style: const TextStyle(
+                  'Home',
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -287,16 +273,12 @@ class DashboardScreenState extends State<DashboardScreen> {
                 color: AppColors.primary,
               ),
               const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  '${AppLanguage.tr('filter_prefix')}$dateStr',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
+              Text(
+                'Filter: $dateStr',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
                 ),
               ),
             ],
@@ -317,19 +299,19 @@ class DashboardScreenState extends State<DashboardScreen> {
                   color: const Color(0xFFCBEBD8),
                 ),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    AppLanguage.tr('view_monthly'),
-                    style: const TextStyle(
+                    'Lihat Sebulan',
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(width: 2),
-                  const Icon(
+                  SizedBox(width: 2),
+                  Icon(
                     Icons.close_rounded,
                     size: 13,
                     color: AppColors.primary,
@@ -350,16 +332,16 @@ class DashboardScreenState extends State<DashboardScreen> {
     final String subtitleText;
 
     if (_transactions.isEmpty) {
-      titleText = AppLanguage.tr('no_transactions_title');
-      subtitleText = AppLanguage.tr('start_recording');
+      titleText = 'Belum ada transaksi';
+      subtitleText = 'Tekan tombol + di bawah untuk mencatat pengeluaran atau pemasukan baru Anda.';
     } else if (daySpecific) {
-      final dateStr = DateFormat('d MMMM yyyy', AppLanguage.instance.currentCode).format(curDate);
-      titleText = '${AppLanguage.tr('no_tx_on_date')} $dateStr';
-      subtitleText = AppLanguage.tr('no_tx_day_desc');
+      final dateStr = DateFormat('d MMMM yyyy').format(curDate);
+      titleText = 'Tidak ada transaksi pada $dateStr';
+      subtitleText = 'Tidak ditemukan catatan keuangan di tanggal ini. Coba pilih tanggal atau bulan lain.';
     } else {
-      final monthStr = DateFormat('MMMM yyyy', AppLanguage.instance.currentCode).format(curDate);
-      titleText = '${AppLanguage.tr('no_tx_in_month')} $monthStr';
-      subtitleText = AppLanguage.tr('no_tx_month_desc');
+      final monthStr = DateFormat('MMMM yyyy').format(curDate);
+      titleText = 'Tidak ada transaksi di $monthStr';
+      subtitleText = 'Belum ada catatan keuangan di bulan ini. Coba pilih bulan lain atau catat transaksi baru.';
     }
 
     return Container(
@@ -421,8 +403,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                 });
               },
               icon: const Icon(Icons.restore_rounded, size: 16, color: AppColors.primary),
-              label: Text(
-                AppLanguage.tr('back_to_current_month'),
+              label: const Text(
+                'Kembali ke Bulan Sekarang',
                 style: TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w700,
@@ -496,9 +478,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        AppLanguage.tr('select_period'),
-                        style: const TextStyle(
+                      const Text(
+                        'Pilih Periode',
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: AppColors.onSurface,
@@ -521,9 +503,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                           Navigator.pop(bottomSheetContext);
                         },
                         icon: const Icon(Icons.today_rounded, size: 16),
-                        label: Text(
-                          AppLanguage.tr('this_month'),
-                          style: const TextStyle(
+                        label: const Text(
+                          'Bulan Ini',
+                          style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                           ),
@@ -701,15 +683,11 @@ class DashboardScreenState extends State<DashboardScreen> {
                       }
                     },
                     icon: const Icon(Icons.event_note_rounded, size: 18, color: AppColors.primary),
-                    label: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        AppLanguage.tr('select_specific_date'),
-                        maxLines: 1,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    label: const Text(
+                      'Pilih Tanggal Tertentu (Spesifik Hari)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -805,7 +783,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           // Expenses
           Expanded(
             child: _buildSummaryColumn(
-              label: AppLanguage.tr('total_spent'),
+              label: 'Expenses',
               value: expenses,
               valueColor: AppColors.expense,
             ),
@@ -815,7 +793,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           // Income
           Expanded(
             child: _buildSummaryColumn(
-              label: AppLanguage.tr('total_income'),
+              label: 'Income',
               value: income,
               valueColor: AppColors.income,
             ),
@@ -825,7 +803,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           // Balance
           Expanded(
             child: _buildSummaryColumn(
-              label: AppLanguage.tr('total_balance'),
+              label: 'Balance',
               value: balance,
               valueColor: AppColors.onSurface,
             ),
@@ -844,16 +822,12 @@ class DashboardScreenState extends State<DashboardScreen> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            label,
-            maxLines: 1,
-            style: const TextStyle(
-              fontSize: 10.5,
-              color: Color(0xFF757575),
-              fontWeight: FontWeight.w500,
-            ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10.5,
+            color: Color(0xFF757575),
+            fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 2),

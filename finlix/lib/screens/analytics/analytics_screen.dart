@@ -4,7 +4,6 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/localization/app_language.dart';
 import '../../models/transaction_model.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -97,9 +96,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        AppLanguage.tr('set_budget_title'),
-                        style: const TextStyle(
+                      const Text(
+                        'Batas Anggaran Bulanan',
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: AppColors.onSurface,
@@ -115,9 +114,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    AppLanguage.tr('set_budget_desc'),
-                    style: const TextStyle(
+                  const Text(
+                    'Tetapkan target maksimal belanja bulanan untuk menjaga stabilitas dompet FinLix Anda.',
+                    style: TextStyle(
                       fontSize: 12.5,
                       color: Color(0xFF757575),
                       height: 1.3,
@@ -161,7 +160,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
-                      labelText: AppLanguage.tr('budget_amount'),
+                      labelText: 'Nominal Batas Anggaran',
                       filled: true,
                       fillColor: const Color(0xFFFAF1E8),
                       border: OutlineInputBorder(
@@ -195,16 +194,16 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('${AppLanguage.tr('budget_saved_toast')}: \$${_formatAmount(parsed)}!'),
+                                content: Text('Batas budget bulanan berhasil diubah ke \$${_formatAmount(parsed)}!'),
                                 backgroundColor: const Color(0xFF006C49),
                               ),
                             );
                           }
                         }
                       },
-                      child: Text(
-                        AppLanguage.tr('save_budget'),
-                        style: const TextStyle(
+                      child: const Text(
+                        'Simpan Anggaran',
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -317,8 +316,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
+              children: const [
+                Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -328,8 +327,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
                 Text(
-                  AppLanguage.tr('nav_analytics'),
-                  style: const TextStyle(
+                  'Analytics',
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -422,9 +421,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              AppLanguage.tr('categories_breakdown'),
-                              style: const TextStyle(
+                            const Text(
+                              'Category Breakdown',
+                              style: TextStyle(
                                 fontSize: 16.5,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.onSurface,
@@ -522,9 +521,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                AppLanguage.tr('spending_breakdown'),
-                style: const TextStyle(
+              const Text(
+                'SPENDING BREAKDOWN',
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
@@ -544,13 +543,13 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     _buildChartToggleTab(
                       index: 0,
                       icon: Icons.donut_large_rounded,
-                      label: AppLanguage.tr('tab_donut'),
+                      label: 'Donut',
                     ),
                     const SizedBox(width: 3),
                     _buildChartToggleTab(
                       index: 1,
                       icon: Icons.bar_chart_rounded,
-                      label: AppLanguage.tr('tab_weekly'),
+                      label: 'Weekly',
                     ),
                   ],
                 ),
@@ -963,8 +962,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(width: 4),
                   Text(
                     maxVal > 0
-                        ? '${AppLanguage.tr('peak_week')}: Week ${peakWeekIndex + 1} (\$${_formatAmount(maxVal)})'
-                        : AppLanguage.tr('no_expenses_yet'),
+                        ? 'Peak: Week ${peakWeekIndex + 1} (\$${_formatAmount(maxVal)})'
+                        : 'No expenses yet',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -975,7 +974,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
             Text(
-              '${AppLanguage.tr('weekly_avg')}: \$${_formatAmount(weeklyAvg)}',
+              'Weekly Avg: \$${_formatAmount(weeklyAvg)}',
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -990,7 +989,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildMonthSelectorCard() {
     final cur = selectedMonth;
-    final monthLabel = DateFormat('MMMM yyyy', AppLanguage.instance.currentCode).format(cur);
+    final monthLabel = DateFormat('MMMM yyyy').format(cur);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -1144,9 +1143,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        AppLanguage.tr('select_analytics_month'),
-                        style: const TextStyle(
+                      const Text(
+                        'Pilih Bulan Analitik',
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: AppColors.onSurface,
@@ -1170,9 +1169,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                           Navigator.pop(bottomSheetContext);
                         },
                         icon: const Icon(Icons.today_rounded, size: 16),
-                        label: Text(
-                          AppLanguage.tr('this_month'),
-                          style: const TextStyle(
+                        label: const Text(
+                          'Bulan Ini',
+                          style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1335,8 +1334,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
         ? const Color(0xFFBD382B)
         : (isNearLimit ? const Color(0xFFB45309) : const Color(0xFF006C49));
     final String statusLabel = isOverBudget
-        ? AppLanguage.tr('over_budget')
-        : (isNearLimit ? AppLanguage.tr('near_limit') : AppLanguage.tr('on_track'));
+        ? 'Over Budget'
+        : (isNearLimit ? 'Mendekati Batas (80%+)' : 'On Track');
     final IconData statusIcon = isOverBudget
         ? Icons.warning_amber_rounded
         : (isNearLimit ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded);
@@ -1358,17 +1357,13 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Text(
-                  AppLanguage.tr('total_spent').toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                    color: Color(0xFF6E7A72),
-                  ),
+              const Text(
+                'TOTAL SPENT THIS MONTH',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: Color(0xFF6E7A72),
                 ),
               ),
               Row(
@@ -1441,16 +1436,12 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
               ),
               const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  '/ \$${_formatAmount(budget)} ${AppLanguage.tr('budget_word')}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF6E7A72),
-                  ),
+              Text(
+                '/ \$${_formatAmount(budget)} budget',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6E7A72),
                 ),
               ),
             ],
@@ -1503,32 +1494,22 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Text(
-                  '${budgetPercent.toStringAsFixed(1)}% ${AppLanguage.tr('budget_usage')}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF6E7A72),
-                  ),
+              Text(
+                '${budgetPercent.toStringAsFixed(1)}% anggaran terpakai',
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF6E7A72),
                 ),
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  remainingBudget >= 0
-                      ? '+\$${_formatAmount(remainingBudget)} ${AppLanguage.tr('remaining')}'
-                      : '-\$${_formatAmount(remainingBudget.abs())} ${AppLanguage.tr('over_by')}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: remainingBudget >= 0 ? const Color(0xFF006C49) : const Color(0xFFBD382B),
-                  ),
+              Text(
+                remainingBudget >= 0
+                    ? '+\$${_formatAmount(remainingBudget)} sisa budget'
+                    : '-\$${_formatAmount(remainingBudget.abs())} over budget',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: remainingBudget >= 0 ? const Color(0xFF006C49) : const Color(0xFFBD382B),
                 ),
               ),
             ],
@@ -1568,10 +1549,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          Text(
-            AppLanguage.tr('no_expenses_analytics'),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
+          const Text(
+            'No Expenses This Month',
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.onSurface,
