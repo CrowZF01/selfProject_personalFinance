@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/formatters.dart';
 import '../../models/savings_goal_model.dart';
 
 class SavingsScreen extends StatefulWidget {
@@ -42,19 +43,8 @@ class SavingsScreenState extends State<SavingsScreen> {
     }
   }
 
-  String _formatAmount(double? amount) {
-    if (amount == null || amount.isNaN || amount.isInfinite) return '0.00';
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return formatter.format(amount);
-  }
-
   String _formatCompact(double? amount) {
-    if (amount == null || amount.isNaN || amount.isInfinite) return '0';
-    if (amount >= 1000) {
-      final formatter = NumberFormat('#,##0', 'en_US');
-      return formatter.format(amount);
-    }
-    return amount.toStringAsFixed(0);
+    return AppFormatters.formatCompact(amount);
   }
 
   @override
@@ -309,7 +299,9 @@ class SavingsScreenState extends State<SavingsScreen> {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '\$${_formatCompact(totalSaved)}',
+                AppFormatters.isIdr
+                    ? AppFormatters.formatCurrency(totalSaved)
+                    : '\$${_formatCompact(totalSaved)}',
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -317,14 +309,15 @@ class SavingsScreenState extends State<SavingsScreen> {
                   letterSpacing: -0.5,
                 ),
               ),
-              Text(
-                '.${(totalSaved % 1 * 100).toInt().toString().padLeft(2, '0')}',
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF757575),
+              if (!AppFormatters.isIdr)
+                Text(
+                  '.${(totalSaved % 1 * 100).toInt().toString().padLeft(2, '0')}',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF757575),
+                  ),
                 ),
-              ),
               const SizedBox(width: 10),
               if (totalTarget > 0)
                 Text(
@@ -356,7 +349,7 @@ class SavingsScreenState extends State<SavingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Target: \$${_formatAmount(totalTarget)}',
+                'Target: ${AppFormatters.formatCurrency(totalTarget)}',
                 style: const TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,
@@ -365,7 +358,7 @@ class SavingsScreenState extends State<SavingsScreen> {
               ),
               Text(
                 totalTarget > totalSaved
-                    ? '\$${_formatAmount(totalTarget - totalSaved)} needed'
+                    ? '${AppFormatters.formatCurrency(totalTarget - totalSaved)} needed'
                     : 'All Goals Funded! 🎉',
                 style: TextStyle(
                   fontSize: 11.5,
@@ -729,7 +722,7 @@ class SavingsScreenState extends State<SavingsScreen> {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  '\$${_formatCompact(goal.currentAmount)}',
+                  AppFormatters.formatCompact(goal.currentAmount),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -739,7 +732,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                 const SizedBox(width: 3),
                 Flexible(
                   child: Text(
-                    '/ \$${_formatCompact(goal.targetAmount)}',
+                    '/ ${AppFormatters.formatCompact(goal.targetAmount)}',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -769,7 +762,7 @@ class SavingsScreenState extends State<SavingsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isCompleted ? 'Goal Reached!' : '\$${_formatCompact(remaining)} left',
+                  isCompleted ? 'Goal Reached!' : '${AppFormatters.formatCompact(remaining)} left',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isCompleted ? FontWeight.w700 : FontWeight.w500,
@@ -857,7 +850,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '\$${_formatAmount(goal.currentAmount)} of \$${_formatAmount(goal.targetAmount)} (${goal.progressPercent.toStringAsFixed(1)}%)',
+                          '${AppFormatters.formatCurrency(goal.currentAmount)} of ${AppFormatters.formatCurrency(goal.targetAmount)} (${goal.progressPercent.toStringAsFixed(1)}%)',
                           style: const TextStyle(
                             fontSize: 12.5,
                             color: Color(0xFF757575),
@@ -927,7 +920,9 @@ class SavingsScreenState extends State<SavingsScreen> {
   /// Dialog Input Top Up Dana ke Pot
   void _showTopUpDialog(SavingsGoalModel goal) {
     final controller = TextEditingController();
-    final quickAmounts = [10.0, 50.0, 100.0, 250.0];
+    final quickAmounts = AppFormatters.isIdr
+        ? [10000.0, 50000.0, 100000.0, 250000.0]
+        : [10.0, 50.0, 100.0, 250.0];
 
     showModalBottomSheet(
       context: context,
@@ -977,7 +972,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Sisa target: \$${_formatAmount(goal.remainingAmount)}',
+                      'Sisa target: ${AppFormatters.formatCurrency(goal.remainingAmount)}',
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: Color(0xFF757575),
@@ -991,7 +986,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                       children: quickAmounts.map((amt) {
                         return ActionChip(
                           label: Text(
-                            '+\$${amt.toInt()}',
+                            '+${AppFormatters.formatCompact(amt)}',
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
@@ -1070,7 +1065,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Berhasil menambah \$${_formatAmount(amount)} ke ${goal.title}!'),
+                                content: Text('Berhasil menambah ${AppFormatters.formatCurrency(amount)} ke ${goal.title}!'),
                                 backgroundColor: const Color(0xFF006C49),
                               ),
                             );

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -44,13 +45,6 @@ class DashboardScreenState extends State<DashboardScreen> {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  // Format currency with 2 decimal places
-  String _formatAmount(double? amount) {
-    if (amount == null || amount.isNaN || amount.isInfinite) return '0.00';
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return formatter.format(amount);
   }
 
   @override
@@ -204,9 +198,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       // Monthly Summary Card
                       _buildMonthlySummaryCard(
-                        expenses: _formatAmount(totalExpense),
-                        income: _formatAmount(totalIncome),
-                        balance: _formatAmount(balance),
+                        expenses: AppFormatters.formatCurrency(totalExpense),
+                        income: AppFormatters.formatCurrency(totalIncome),
+                        balance: AppFormatters.formatCurrency(balance),
                       ),
                       if (daySpecific) ...[
                         const SizedBox(height: 10),
@@ -232,8 +226,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                             padding: const EdgeInsets.only(bottom: 16.0),
                             child: _buildDateSection(
                               dateTitle: entry.key,
-                              expensesText: groupExpense > 0 ? _formatAmount(groupExpense) : '0',
-                              incomeText: groupIncome > 0 ? _formatAmount(groupIncome) : null,
+                              expensesText: groupExpense > 0 ? AppFormatters.formatCurrency(groupExpense) : AppFormatters.formatCurrency(0),
+                              incomeText: groupIncome > 0 ? AppFormatters.formatCurrency(groupIncome) : null,
                               items: entry.value,
                             ),
                           );
@@ -974,7 +968,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         : const Color(0xFFFFDED4);
     final bool isExpense = tx.type == TransactionType.expense;
 
-    final formattedAmt = (isExpense ? '-' : '') + _formatAmount(tx.amount);
+    final formattedAmt = (isExpense ? '-' : '+') + AppFormatters.formatCurrency(tx.amount);
 
     return Dismissible(
       key: ValueKey(tx.id ?? tx.date.millisecondsSinceEpoch),

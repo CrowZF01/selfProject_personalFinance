@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
+import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -25,6 +26,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
+    _amount = AppFormatters.isIdr ? '25000' : '18.50';
+  }
+
+  String get _displayAmount {
+    if (AppFormatters.isIdr) {
+      final parsed = double.tryParse(_amount) ?? 0;
+      return NumberFormat('#,##0', 'id_ID').format(parsed.round());
+    }
+    return _amount;
   }
 
   List<Map<String, dynamic>> get _categories {
@@ -54,8 +64,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           if (_amount.isEmpty) _amount = '0';
         }
       } else if (val == '.') {
+        if (AppFormatters.isIdr) return; // IDR has no decimals
         if (!_amount.contains('.')) {
           _amount = '$_amount.';
+        }
+      } else if (val == '000') {
+        if (_amount != '0') {
+          _amount = '${_amount}000';
         }
       } else if (val == '00') {
         if (_amount != '0') {
@@ -75,7 +90,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         }
       } else {
         // Number key (0-9)
-        if (_amount.contains('.')) {
+        if (!AppFormatters.isIdr && _amount.contains('.')) {
           final parts = _amount.split('.');
           if (parts.length > 1 && parts[1].length >= 2) {
             // Already has 2 decimal digits, prevent extra digits
@@ -590,16 +605,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
-                r'$ ',
-                style: TextStyle(
+              Text(
+                '${AppFormatters.currencySymbol} ',
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF006C49),
                 ),
               ),
               Text(
-                _amount,
+                _displayAmount,
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
@@ -787,10 +802,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    // Row 4 (., 0, 00)
+                    // Row 4 (., 0, 00) or ('000', 0, '00')
                     Row(
                       children: [
-                        _buildKey('.'),
+                        _buildKey(AppFormatters.isIdr ? '000' : '.'),
                         _buildKey('0'),
                         _buildKey('00'),
                       ],

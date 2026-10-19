@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -32,11 +32,6 @@ class ProfileScreenState extends State<ProfileScreen> {
   int _savingsScore = 98;
   int _totalTransactionsCount = 0;
 
-  final NumberFormat _currencyFormatter = NumberFormat('#,##0.00', 'en_US');
-
-  String _formatAmount(double amount) {
-    return _currencyFormatter.format(amount);
-  }
 
   @override
   void initState() {
@@ -289,10 +284,13 @@ class ProfileScreenState extends State<ProfileScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: [500.0, 1000.0, 1500.0, 2000.0, 3000.0, 5000.0].map((amt) {
+                    children: (AppFormatters.isIdr
+                            ? [500000.0, 1000000.0, 2000000.0, 5000000.0, 10000000.0]
+                            : [500.0, 1000.0, 1500.0, 2000.0, 3000.0, 5000.0])
+                        .map((amt) {
                       final isSelected = double.tryParse(controller.text) == amt;
                       return ChoiceChip(
-                        label: Text('\$${amt.toStringAsFixed(0)}'),
+                        label: Text(AppFormatters.formatCompact(amt)),
                         selected: isSelected,
                         selectedColor: const Color(0xFFD4EFE1),
                         backgroundColor: const Color(0xFFFAF1E8),
@@ -355,7 +353,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Batas anggaran bulanan berhasil disimpan: \$${_formatAmount(parsed)}!'),
+                                content: Text('Batas anggaran bulanan berhasil disimpan: ${AppFormatters.formatCurrency(parsed)}!'),
                                 backgroundColor: const Color(0xFF006C49),
                               ),
                             );
@@ -481,6 +479,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           setState(() {
                             _currency = selectedCode;
                           });
+                          AppFormatters.setCurrency(selectedCode);
                           await DbHelper.instance.setSetting('currency', selectedCode);
                           await loadData();
                           if (mounted) {
@@ -899,6 +898,56 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // --- Modal Konfirmasi Reset Seluruh Data Akun ---
+  void _showResetAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: Row(
+          children: const [
+            Icon(Icons.restart_alt_rounded, color: Color(0xFFC05621)),
+            SizedBox(width: 8),
+            Text('Reset Semua Data?', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+          ],
+        ),
+        content: const Text(
+          'Tindakan ini akan menghapus seluruh catatan transaksi, kantong tabungan impian, dan mengembalikan setelan aplikasi ke kondisi awal seperti baru diinstal.\n\nApakah Anda yakin ingin melanjutkan?',
+          style: TextStyle(fontSize: 13, color: Color(0xFF757575), height: 1.35),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal', style: TextStyle(color: Color(0xFF757575))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFBD382B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(ctx);
+              await DbHelper.instance.resetAllData();
+              AppFormatters.setCurrency('USD (\$)');
+              await loadData();
+              if (mounted) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Seluruh data akun berhasil di-reset ke kondisi awal!'),
+                    backgroundColor: Color(0xFF006C49),
+                  ),
+                );
+              }
+            },
+            child: const Text('Ya, Reset Data', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- Modal Konfirmasi Keluar / Reset ---
   void _showLogoutDialog() {
     showDialog(
@@ -1128,7 +1177,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '\$${_formatAmount(_monthlyBudget)}',
+                                AppFormatters.formatCurrency(_monthlyBudget),
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
@@ -1293,6 +1342,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ]),
                       const SizedBox(height: 22),
+
+                      // Reset Data Akun Button
+                      InkWell(
+                        onTap: _showResetAccountDialog,
+                        borderRadius: BorderRadius.circular(20),
+                        child: _buildResetButton(),
+                      ),
+                      const SizedBox(height: 12),
 
                       // Keluar Akun Button
                       InkWell(
@@ -1783,6 +1840,40 @@ class ProfileScreenState extends State<ProfileScreen> {
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Color(0xFFBD382B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResetButton() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4EC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFFFDEC9),
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(
+            Icons.restart_alt_rounded,
+            color: Color(0xFFC05621),
+            size: 20,
+          ),
+          SizedBox(width: 8),
+          Text(
+            'Reset Data Akun',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFC05621),
             ),
           ),
         ],

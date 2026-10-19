@@ -255,6 +255,15 @@ class DbHelper {
     };
   }
 
+  Future<void> resetAllData() async {
+    final db = await instance.database;
+    await db.delete('transactions');
+    await db.delete('savings_goals');
+    await db.delete('settings');
+    _settingsTableVerified = false;
+    await _ensureSettingsTable(db);
+  }
+
   Future<void> close() async {
     final db = await instance.database;
     db.close();

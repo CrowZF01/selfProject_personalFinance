@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -126,10 +127,13 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: [500.0, 1000.0, 1500.0, 2000.0, 3000.0].map((amt) {
+                    children: (AppFormatters.isIdr
+                            ? [500000.0, 1000000.0, 2000000.0, 5000000.0, 10000000.0]
+                            : [500.0, 1000.0, 1500.0, 2000.0, 3000.0])
+                        .map((amt) {
                       final isSelected = double.tryParse(controller.text) == amt;
                       return ChoiceChip(
-                        label: Text('\$${amt.toStringAsFixed(0)}'),
+                        label: Text(AppFormatters.formatCompact(amt)),
                         selected: isSelected,
                         selectedColor: const Color(0xFFD4EFE1),
                         backgroundColor: const Color(0xFFFAF1E8),
@@ -194,7 +198,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Batas budget bulanan berhasil diubah ke \$${_formatAmount(parsed)}!'),
+                                content: Text('Batas budget bulanan berhasil diubah ke ${AppFormatters.formatCurrency(parsed)}!'),
                                 backgroundColor: const Color(0xFF006C49),
                               ),
                             );
@@ -240,12 +244,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
       _touchedPieIndex = -1;
       _touchedBarIndex = -1;
     });
-  }
-
-  String _formatAmount(double? amount) {
-    if (amount == null || amount.isNaN || amount.isInfinite) return '0.00';
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return formatter.format(amount);
   }
 
   @override
@@ -471,8 +469,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                               iconColor: color,
                               title: name,
                               subtitle: '$count ${count == 1 ? "transaction" : "transactions"} • ${percentage.toStringAsFixed(1)}%',
-                              spent: '\$${_formatAmount(spent)}',
-                              total: '\$${_formatAmount(totalExpense)}',
+                              spent: AppFormatters.formatCurrency(spent),
+                              total: AppFormatters.formatCurrency(totalExpense),
                               progress: totalExpense > 0 ? (spent / totalExpense) : 0.0,
                               progressColor: color,
                             );
@@ -715,7 +713,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '\$${_formatAmount(activeSpent)}',
+                    AppFormatters.formatCurrency(activeSpent),
                     style: const TextStyle(
                       fontSize: 16.5,
                       fontWeight: FontWeight.w800,
@@ -860,7 +858,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     final weekNum = group.x + 1;
                     return BarTooltipItem(
-                      'Week $weekNum\n\$${_formatAmount(rod.toY)}',
+                      'Week $weekNum\n${AppFormatters.formatCurrency(rod.toY)}',
                       const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -962,7 +960,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(width: 4),
                   Text(
                     maxVal > 0
-                        ? 'Peak: Week ${peakWeekIndex + 1} (\$${_formatAmount(maxVal)})'
+                        ? 'Peak: Week ${peakWeekIndex + 1} (${AppFormatters.formatCurrency(maxVal)})'
                         : 'No expenses yet',
                     style: const TextStyle(
                       fontSize: 11,
@@ -974,7 +972,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
             Text(
-              'Weekly Avg: \$${_formatAmount(weeklyAvg)}',
+              'Weekly Avg: ${AppFormatters.formatCurrency(weeklyAvg)}',
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -1427,7 +1425,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '\$${_formatAmount(totalExpense)}',
+                AppFormatters.formatCurrency(totalExpense),
                 style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
@@ -1437,7 +1435,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               const SizedBox(width: 6),
               Text(
-                '/ \$${_formatAmount(budget)} budget',
+                '/ ${AppFormatters.formatCurrency(budget)} budget',
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1504,8 +1502,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               Text(
                 remainingBudget >= 0
-                    ? '+\$${_formatAmount(remainingBudget)} sisa budget'
-                    : '-\$${_formatAmount(remainingBudget.abs())} over budget',
+                    ? '+${AppFormatters.formatCurrency(remainingBudget)} sisa budget'
+                    : '-${AppFormatters.formatCurrency(remainingBudget.abs())} over budget',
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
@@ -1700,7 +1698,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
       badgeBg = const Color(0xFFFFEDD5);
 
       insightMessage =
-          '$catName is your largest expense this month, accounting for \$${_formatAmount(topCategoryEntry.value)} (${percentage.toStringAsFixed(0)}% of total spent).';
+          '$catName is your largest expense this month, accounting for ${AppFormatters.formatCurrency(topCategoryEntry.value)} (${percentage.toStringAsFixed(0)}% of total spent).';
     } else {
       insightMessage = 'You have no expenses recorded for this month yet.';
     }

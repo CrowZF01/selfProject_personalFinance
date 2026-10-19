@@ -6,7 +6,9 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'core/theme/app_theme.dart';
 import 'screens/main_screen.dart';
 
-void main() {
+import 'core/utils/formatters.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (kIsWeb) {
@@ -15,6 +17,8 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+
+  await AppFormatters.init();
 
   runApp(const FinlixApp());
 }
