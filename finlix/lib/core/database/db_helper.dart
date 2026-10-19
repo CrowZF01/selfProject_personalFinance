@@ -234,9 +234,9 @@ class DbHelper {
   }
 
   Future<Map<String, String>> getUserProfile() async {
-    final name = await getSetting('user_name') ?? 'Alex Rivera';
-    final handle = await getSetting('user_handle') ?? '@alexfinances';
-    final email = await getSetting('user_email') ?? 'alex.rivera@example.com';
+    final name = await getSetting('user_name') ?? '';
+    final handle = await getSetting('user_handle') ?? '';
+    final email = await getSetting('user_email') ?? '';
     final currency = await getSetting('currency') ?? 'USD (\$)';
     final salaryDay = await getSetting('salary_day') ?? '25';
     final biometric = await getSetting('biometric_enabled') ?? 'true';

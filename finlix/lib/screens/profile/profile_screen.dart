@@ -15,9 +15,9 @@ class ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
 
   // Profile Information
-  String _userName = 'Alex Rivera';
-  String _userHandle = '@alexfinances';
-  String _userEmail = 'alex.rivera@example.com';
+  String _userName = '';
+  String _userHandle = '';
+  String _userEmail = '';
   String _currency = 'USD (\$)';
   int _salaryDay = 25;
   double _monthlyBudget = 1500.0;
@@ -75,9 +75,9 @@ class ProfileScreenState extends State<ProfileScreen> {
 
       if (mounted) {
         setState(() {
-          _userName = profile['user_name'] ?? 'Alex Rivera';
-          _userHandle = profile['user_handle'] ?? '@alexfinances';
-          _userEmail = profile['user_email'] ?? 'alex.rivera@example.com';
+          _userName = profile['user_name'] ?? '';
+          _userHandle = profile['user_handle'] ?? '';
+          _userEmail = profile['user_email'] ?? '';
           _currency = profile['currency'] ?? 'USD (\$)';
           _salaryDay = int.tryParse(profile['salary_day'] ?? '25') ?? 25;
           _isBiometricEnabled = profile['biometric_enabled'] != 'false';

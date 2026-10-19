@@ -28,7 +28,7 @@ class SavingsScreenState extends State<SavingsScreen> {
     setState(() => _isLoading = true);
     try {
       // Seed default pots jika tabel kosong
-      await DbHelper.instance.seedDefaultSavingsGoalsIfEmpty();
+      // await DbHelper.instance.seedDefaultSavingsGoalsIfEmpty();
       final data = await DbHelper.instance.getAllSavingsGoals();
       if (mounted) {
         setState(() {
@@ -408,7 +408,7 @@ class SavingsScreenState extends State<SavingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  'Round-Ups into Emergency Fund',
+                  'Round to Emergency Fund',
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
