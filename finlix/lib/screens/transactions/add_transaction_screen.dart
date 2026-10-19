@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
+import '../../core/localization/app_language.dart';
 import '../../models/transaction_model.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -98,15 +99,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Edit Note / Description',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        title: Text(
+          AppLanguage.tr('edit_note_title'),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
         content: TextField(
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: 'Enter description...',
+            hintText: AppLanguage.tr('enter_description_hint'),
             filled: true,
             fillColor: const Color(0xFFFAF1E8),
             border: OutlineInputBorder(
@@ -122,7 +123,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF757575))),
+            child: Text(AppLanguage.tr('cancel'), style: const TextStyle(color: Color(0xFF757575))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -136,7 +137,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               });
               Navigator.pop(context);
             },
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
+            child: Text(AppLanguage.tr('save'), style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -150,9 +151,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final check = DateTime(date.year, date.month, date.day);
 
     if (check == today) {
-      return 'Today';
+      return AppLanguage.tr('today');
     } else if (check == yesterday) {
-      return 'Yesterday';
+      return AppLanguage.tr('yesterday');
     } else if (check.year == now.year) {
       return DateFormat('d MMM').format(date);
     } else {
@@ -205,7 +206,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final parsedAmount = double.tryParse(_amount.replaceAll(',', ''));
     if (parsedAmount == null || parsedAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Masukkan nominal uang yang valid')),
+        SnackBar(content: Text(AppLanguage.tr('invalid_amount_toast'))),
       );
       return;
     }
@@ -229,9 +230,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Transaksi berhasil disimpan!'),
-            backgroundColor: Color(0xFF00583A),
+          SnackBar(
+            content: Text(AppLanguage.tr('transaction_saved_toast')),
+            backgroundColor: const Color(0xFF00583A),
           ),
         );
         Navigator.pop(context, true);
@@ -240,7 +241,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menyimpan: $e'),
+            content: Text('${AppLanguage.tr('save_failed_toast')}: $e'),
             backgroundColor: const Color(0xFFBD382B),
           ),
         );
@@ -290,9 +291,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        title: const Text(
-          'Add Transaction',
-          style: TextStyle(
+        title: Text(
+          AppLanguage.tr('add_transaction_title'),
+          style: const TextStyle(
             color: AppColors.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -379,18 +380,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     // Category Section Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text(
-                          'Select Category',
-                          style: TextStyle(
+                          AppLanguage.tr('select_category'),
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF555555),
                           ),
                         ),
                         Text(
-                          'Horizontal scroll',
-                          style: TextStyle(
+                          AppLanguage.tr('scroll_hint'),
+                          style: const TextStyle(
                             fontSize: 11,
                             color: Color(0xFF8E9A92),
                           ),
@@ -456,7 +457,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Expense',
+                      AppLanguage.tr('type_expense'),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: _isExpense ? FontWeight.w700 : FontWeight.w500,
@@ -498,7 +499,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Income',
+                      AppLanguage.tr('type_income'),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: !_isExpense ? FontWeight.w700 : FontWeight.w500,
@@ -544,7 +545,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    _isExpense ? 'EXPENSE AMOUNT' : 'INCOME AMOUNT',
+                    _isExpense ? AppLanguage.tr('expense_amount_label') : AppLanguage.tr('income_amount_label'),
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
@@ -563,16 +564,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(
+                  children: [
+                    const Icon(
                       Icons.account_balance_wallet_rounded,
                       size: 13,
                       color: Color(0xFF59579A),
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
-                      'Wallet',
-                      style: TextStyle(
+                      AppLanguage.tr('wallet_label'),
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF59579A),
@@ -834,16 +835,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   ),
                                 ),
                               ]
-                            : const [
-                                Icon(
+                            : [
+                                const Icon(
                                   Icons.check_rounded,
                                   color: Colors.white,
                                   size: 22,
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
-                                  'Save',
-                                  style: TextStyle(
+                                  AppLanguage.tr('save'),
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,

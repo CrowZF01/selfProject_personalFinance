@@ -15,24 +15,34 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey<DashboardScreenState>();
-  final GlobalKey<AnalyticsScreenState> _analyticsKey = GlobalKey<AnalyticsScreenState>();
-  final GlobalKey<SavingsScreenState> _savingsKey = GlobalKey<SavingsScreenState>();
+  GlobalKey<DashboardScreenState>? _dashboardKey;
+  GlobalKey<AnalyticsScreenState>? _analyticsKey;
+  GlobalKey<SavingsScreenState>? _savingsKey;
+  GlobalKey<ProfileScreenState>? _profileKey;
 
-  late final List<Widget> _screens = [
-    DashboardScreen(key: _dashboardKey),
-    AnalyticsScreen(key: _analyticsKey),
-    SavingsScreen(key: _savingsKey),
-    const ProfileScreen(),
-  ];
+  GlobalKey<DashboardScreenState> get dashboardKey =>
+      _dashboardKey ??= GlobalKey<DashboardScreenState>();
+  GlobalKey<AnalyticsScreenState> get analyticsKey =>
+      _analyticsKey ??= GlobalKey<AnalyticsScreenState>();
+  GlobalKey<SavingsScreenState> get savingsKey =>
+      _savingsKey ??= GlobalKey<SavingsScreenState>();
+  GlobalKey<ProfileScreenState> get profileKey =>
+      _profileKey ??= GlobalKey<ProfileScreenState>();
 
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      DashboardScreen(key: dashboardKey),
+      AnalyticsScreen(key: analyticsKey),
+      SavingsScreen(key: savingsKey),
+      ProfileScreen(key: profileKey),
+    ];
+
     return Scaffold(
       extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
@@ -41,11 +51,13 @@ class _MainScreenState extends State<MainScreen> {
             _currentIndex = index;
           });
           if (index == 0) {
-            _dashboardKey.currentState?.loadData();
+            dashboardKey.currentState?.loadData();
           } else if (index == 1) {
-            _analyticsKey.currentState?.loadData();
+            analyticsKey.currentState?.loadData();
           } else if (index == 2) {
-            _savingsKey.currentState?.loadData();
+            savingsKey.currentState?.loadData();
+          } else if (index == 3) {
+            profileKey.currentState?.loadData();
           }
         },
         onAddTap: () async {
@@ -57,9 +69,10 @@ class _MainScreenState extends State<MainScreen> {
           );
 
           if (result == true) {
-            _dashboardKey.currentState?.loadData();
-            _analyticsKey.currentState?.loadData();
-            _savingsKey.currentState?.loadData();
+            dashboardKey.currentState?.loadData();
+            analyticsKey.currentState?.loadData();
+            savingsKey.currentState?.loadData();
+            profileKey.currentState?.loadData();
           }
         },
       ),

@@ -30,6 +30,14 @@ class DbHelper {
       options: OpenDatabaseOptions(
         version: 1,
         onCreate: _createDB,
+        onOpen: (db) async {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS settings (
+              key TEXT PRIMARY KEY,
+              value TEXT NOT NULL
+            )
+          ''');
+        },
       ),
     );
   }
@@ -57,6 +65,14 @@ class DbHelper {
         current_amount REAL NOT NULL,
         emoji TEXT NOT NULL,
         target_date TEXT
+      )
+    ''');
+
+    // Settings Table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
       )
     ''');
   }
@@ -153,6 +169,90 @@ class DbHelper {
         'target_date': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
       });
     }
+  }
+
+  Future<int> getSavingsGoalsCount() async {
+    final db = await instance.database;
+    final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM savings_goals'));
+    return count ?? 0;
+  }
+
+  // --- Settings & Preferences CRUD ---
+  static bool _settingsTableVerified = false;
+
+  Future<void> _ensureSettingsTable(Database db) async {
+    if (_settingsTableVerified) return;
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    ''');
+    _settingsTableVerified = true;
+  }
+
+  Future<String?> getSetting(String key) async {
+    try {
+      final db = await instance.database;
+      await _ensureSettingsTable(db);
+      final res = await db.query('settings', where: 'key = ?', whereArgs: [key]);
+      if (res.isNotEmpty) {
+        return res.first['value'] as String?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('DbHelper getSetting error: $e');
+      return null;
+    }
+  }
+
+  Future<void> setSetting(String key, String value) async {
+    try {
+      final db = await instance.database;
+      await _ensureSettingsTable(db);
+      await db.insert(
+        'settings',
+        {'key': key, 'value': value},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      debugPrint('DbHelper setSetting error: $e');
+    }
+  }
+
+  Future<double> getMonthlyBudget() async {
+    final val = await getSetting('monthly_budget');
+    if (val != null) {
+      final parsed = double.tryParse(val);
+      if (parsed != null && parsed > 0) return parsed;
+    }
+    return 1500.0; // Default budget limit
+  }
+
+  Future<void> setMonthlyBudget(double budget) async {
+    await setSetting('monthly_budget', budget.toString());
+  }
+
+  Future<Map<String, String>> getUserProfile() async {
+    final name = await getSetting('user_name') ?? 'Alex Rivera';
+    final handle = await getSetting('user_handle') ?? '@alexfinances';
+    final email = await getSetting('user_email') ?? 'alex.rivera@example.com';
+    final currency = await getSetting('currency') ?? 'USD (\$)';
+    final salaryDay = await getSetting('salary_day') ?? '25';
+    final biometric = await getSetting('biometric_enabled') ?? 'true';
+    final budgetAlert = await getSetting('budget_alert_enabled') ?? 'true';
+    final haptics = await getSetting('haptics_enabled') ?? 'true';
+
+    return {
+      'user_name': name,
+      'user_handle': handle,
+      'user_email': email,
+      'currency': currency,
+      'salary_day': salaryDay,
+      'biometric_enabled': biometric,
+      'budget_alert_enabled': budgetAlert,
+      'haptics_enabled': haptics,
+    };
   }
 
   Future<void> close() async {

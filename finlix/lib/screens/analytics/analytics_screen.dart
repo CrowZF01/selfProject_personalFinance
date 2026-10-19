@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/data/default_categories.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/localization/app_language.dart';
 import '../../models/transaction_model.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -19,6 +20,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
 
   List<TransactionModel> _allTransactions = [];
   bool _isLoading = true;
+  double? _monthlyBudget;
+  double get monthlyBudget => _monthlyBudget ?? 1500.0;
 
   int _selectedChartTab = 0; // 0 = Donut Chart, 1 = Weekly Bar Chart
   int _touchedPieIndex = -1;
@@ -31,14 +34,16 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     loadData();
   }
 
-  /// Memuat semua transaksi dari SQLite
+  /// Memuat semua transaksi dan batas budget dari SQLite
   Future<void> loadData() async {
     setState(() => _isLoading = true);
     try {
       final data = await DbHelper.instance.getAllTransactions();
+      final budget = await DbHelper.instance.getMonthlyBudget();
       if (mounted) {
         setState(() {
           _allTransactions = data;
+          _monthlyBudget = budget;
           _isLoading = false;
         });
       }
@@ -47,6 +52,175 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showEditBudgetModal() {
+    final controller = TextEditingController(text: monthlyBudget.toStringAsFixed(0));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalCtx, setModalState) {
+            return SafeArea(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+                ),
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 20,
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+                ),
+                decoration: const BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD8C7BA),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppLanguage.tr('set_budget_title'),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFFFAF1E8),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    AppLanguage.tr('set_budget_desc'),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: Color(0xFF757575),
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [500.0, 1000.0, 1500.0, 2000.0, 3000.0].map((amt) {
+                      final isSelected = double.tryParse(controller.text) == amt;
+                      return ChoiceChip(
+                        label: Text('\$${amt.toStringAsFixed(0)}'),
+                        selected: isSelected,
+                        selectedColor: const Color(0xFFD4EFE1),
+                        backgroundColor: const Color(0xFFFAF1E8),
+                        labelStyle: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? const Color(0xFF006C49) : AppColors.onSurface,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isSelected ? const Color(0xFF006C49) : const Color(0xFFE2CFC2),
+                          ),
+                        ),
+                        onSelected: (selected) {
+                          if (selected) {
+                            setModalState(() {
+                              controller.text = amt.toStringAsFixed(0);
+                            });
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: controller,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
+                      labelText: AppLanguage.tr('budget_amount'),
+                      filled: true,
+                      fillColor: const Color(0xFFFAF1E8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: AppColors.borderSubtle),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00583A),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: () async {
+                        final parsed = double.tryParse(controller.text);
+                        if (parsed != null && parsed > 0) {
+                          final messenger = ScaffoldMessenger.of(context);
+                          await DbHelper.instance.setMonthlyBudget(parsed);
+                          await loadData();
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (mounted) {
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('${AppLanguage.tr('budget_saved_toast')}: \$${_formatAmount(parsed)}!'),
+                                backgroundColor: const Color(0xFF006C49),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: Text(
+                        AppLanguage.tr('save_budget'),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+          },
+        );
+      },
+    );
   }
 
   /// Pindah ke bulan sebelumnya
@@ -69,7 +243,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     });
   }
 
-  String _formatAmount(double amount) {
+  String _formatAmount(double? amount) {
+    if (amount == null || amount.isNaN || amount.isInfinite) return '0.00';
     final formatter = NumberFormat('#,##0.00', 'en_US');
     return formatter.format(amount);
   }
@@ -142,8 +317,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -153,8 +328,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
                 Text(
-                  'Analytics',
-                  style: TextStyle(
+                  AppLanguage.tr('nav_analytics'),
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -165,13 +340,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
           ],
         ),
         actions: [
-          // Tombol Refresh manual
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.onSurface, size: 22),
-            onPressed: loadData,
-            tooltip: 'Refresh Data',
-          ),
-
           // Notification Bell Button
           Container(
             width: 38,
@@ -254,9 +422,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Category Breakdown',
-                              style: TextStyle(
+                            Text(
+                              AppLanguage.tr('categories_breakdown'),
+                              style: const TextStyle(
                                 fontSize: 16.5,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.onSurface,
@@ -354,9 +522,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'SPENDING BREAKDOWN',
-                style: TextStyle(
+              Text(
+                AppLanguage.tr('spending_breakdown'),
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
@@ -376,13 +544,13 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     _buildChartToggleTab(
                       index: 0,
                       icon: Icons.donut_large_rounded,
-                      label: 'Donut',
+                      label: AppLanguage.tr('tab_donut'),
                     ),
                     const SizedBox(width: 3),
                     _buildChartToggleTab(
                       index: 1,
                       icon: Icons.bar_chart_rounded,
-                      label: 'Weekly',
+                      label: AppLanguage.tr('tab_weekly'),
                     ),
                   ],
                 ),
@@ -795,8 +963,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(width: 4),
                   Text(
                     maxVal > 0
-                        ? 'Peak: Week ${peakWeekIndex + 1} (\$${_formatAmount(maxVal)})'
-                        : 'No expenses yet',
+                        ? '${AppLanguage.tr('peak_week')}: Week ${peakWeekIndex + 1} (\$${_formatAmount(maxVal)})'
+                        : AppLanguage.tr('no_expenses_yet'),
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -807,7 +975,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
             Text(
-              'Weekly Avg: \$${_formatAmount(weeklyAvg)}',
+              '${AppLanguage.tr('weekly_avg')}: \$${_formatAmount(weeklyAvg)}',
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -822,7 +990,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildMonthSelectorCard() {
     final cur = selectedMonth;
-    final monthLabel = DateFormat('MMMM yyyy').format(cur);
+    final monthLabel = DateFormat('MMMM yyyy', AppLanguage.instance.currentCode).format(cur);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -976,9 +1144,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Pilih Bulan Analitik',
-                        style: TextStyle(
+                      Text(
+                        AppLanguage.tr('select_analytics_month'),
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: AppColors.onSurface,
@@ -1002,9 +1170,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                           Navigator.pop(bottomSheetContext);
                         },
                         icon: const Icon(Icons.today_rounded, size: 16),
-                        label: const Text(
-                          'Bulan Ini',
-                          style: TextStyle(
+                        label: Text(
+                          AppLanguage.tr('this_month'),
+                          style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1154,8 +1322,24 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     required double totalIncome,
     required List<MapEntry<String, double>> sortedCategories,
   }) {
-    final double netRemaining = totalIncome - totalExpense;
-    final bool isOnTrack = totalExpense <= totalIncome;
+    final double budget = monthlyBudget;
+    final double remainingBudget = budget - totalExpense;
+    final bool isOverBudget = budget > 0 && totalExpense > budget;
+    final bool isNearLimit = !isOverBudget && budget > 0 && totalExpense >= (budget * 0.8);
+    final double budgetPercent = budget > 0 ? ((totalExpense / budget) * 100) : 0.0;
+
+    final Color statusBg = isOverBudget
+        ? const Color(0xFFFFECE5)
+        : (isNearLimit ? const Color(0xFFFEF3C7) : const Color(0xFFD4EFE1));
+    final Color statusTextColor = isOverBudget
+        ? const Color(0xFFBD382B)
+        : (isNearLimit ? const Color(0xFFB45309) : const Color(0xFF006C49));
+    final String statusLabel = isOverBudget
+        ? AppLanguage.tr('over_budget')
+        : (isNearLimit ? AppLanguage.tr('near_limit') : AppLanguage.tr('on_track'));
+    final IconData statusIcon = isOverBudget
+        ? Icons.warning_amber_rounded
+        : (isNearLimit ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1170,44 +1354,73 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Total Spent label + Status badge
+          // Top Row: Total Spent label + Status badge + Edit Budget button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'TOTAL SPENT THIS MONTH',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: Color(0xFF6E7A72),
+              Expanded(
+                child: Text(
+                  AppLanguage.tr('total_spent').toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: Color(0xFF6E7A72),
+                  ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isOnTrack ? const Color(0xFFD4EFE1) : const Color(0xFFFFE5E5),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isOnTrack ? Icons.check_circle_outline_rounded : Icons.info_outline_rounded,
-                      size: 14,
-                      color: isOnTrack ? const Color(0xFF006C49) : const Color(0xFFBD382B),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      isOnTrack ? 'On Track' : 'Over Budget',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: isOnTrack ? const Color(0xFF006C49) : const Color(0xFFBD382B),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          statusIcon,
+                          size: 13,
+                          color: statusTextColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          statusLabel,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: statusTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    onTap: _showEditBudgetModal,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF0E6),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFFF3D5C8),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.edit_outlined,
+                        size: 14,
+                        color: Color(0xFF8E4C3B),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1228,67 +1441,94 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
               ),
               const SizedBox(width: 6),
-              if (totalIncome > 0)
-                Text(
-                  '/ \$${_formatAmount(totalIncome)} inc',
+              Flexible(
+                child: Text(
+                  '/ \$${_formatAmount(budget)} ${AppLanguage.tr('budget_word')}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                     color: Color(0xFF6E7A72),
                   ),
                 ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
 
-          // Dynamic Segmented Category Bar
+          // Budget Progress Bar
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Container(
-              height: 10,
-              color: const Color(0xFFF0E4DA),
-              child: sortedCategories.isEmpty
-                  ? const SizedBox()
-                  : Row(
-                      children: sortedCategories.map((entry) {
-                        final cat = DefaultCategories.byId(entry.key);
-                        final color = cat?.color ?? AppColors.primary;
-                        final flex = ((entry.value / totalExpense) * 1000).toInt().clamp(1, 1000);
-                        return Expanded(
-                          flex: flex,
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 0.5),
-                            color: color,
-                          ),
-                        );
-                      }).toList(),
-                    ),
+            child: LinearProgressIndicator(
+              value: budget > 0 ? (totalExpense / budget).clamp(0.0, 1.0) : 0.0,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFF0E4DA),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isOverBudget
+                    ? const Color(0xFFBD382B)
+                    : (isNearLimit ? const Color(0xFFE28A3B) : const Color(0xFF006C49)),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+
+          // Dynamic Segmented Category Bar
+          if (sortedCategories.isNotEmpty && totalExpense > 0) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                height: 6,
+                color: const Color(0xFFF0E4DA),
+                child: Row(
+                  children: sortedCategories.map((entry) {
+                    final cat = DefaultCategories.byId(entry.key);
+                    final color = cat?.color ?? AppColors.primary;
+                    final flex = ((entry.value / totalExpense) * 1000).toInt().clamp(1, 1000);
+                    return Expanded(
+                      flex: flex,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 0.5),
+                        color: color,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
 
           // Bottom Stats
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                totalIncome > 0
-                    ? '${((totalExpense / totalIncome) * 100).toStringAsFixed(1)}% of income'
-                    : '${sortedCategories.length} categories tracked',
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF6E7A72),
+              Flexible(
+                child: Text(
+                  '${budgetPercent.toStringAsFixed(1)}% ${AppLanguage.tr('budget_usage')}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF6E7A72),
+                  ),
                 ),
               ),
-              Text(
-                netRemaining >= 0
-                    ? '+\$${_formatAmount(netRemaining)} remaining'
-                    : '-\$${_formatAmount(netRemaining.abs())} deficit',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: netRemaining >= 0 ? const Color(0xFF006C49) : const Color(0xFFBD382B),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  remainingBudget >= 0
+                      ? '+\$${_formatAmount(remainingBudget)} ${AppLanguage.tr('remaining')}'
+                      : '-\$${_formatAmount(remainingBudget.abs())} ${AppLanguage.tr('over_by')}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: remainingBudget >= 0 ? const Color(0xFF006C49) : const Color(0xFFBD382B),
+                  ),
                 ),
               ),
             ],
@@ -1328,9 +1568,10 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'No Expenses This Month',
-            style: TextStyle(
+          Text(
+            AppLanguage.tr('no_expenses_analytics'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.onSurface,
