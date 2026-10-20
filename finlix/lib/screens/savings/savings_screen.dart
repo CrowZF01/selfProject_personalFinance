@@ -6,7 +6,14 @@ import '../../core/utils/formatters.dart';
 import '../../models/savings_goal_model.dart';
 
 class SavingsScreen extends StatefulWidget {
-  const SavingsScreen({super.key});
+  final VoidCallback? onHomeTap;
+  final VoidCallback? onProfileTap;
+
+  const SavingsScreen({
+    super.key,
+    this.onHomeTap,
+    this.onProfileTap,
+  });
 
   @override
   State<SavingsScreen> createState() => SavingsScreenState();
@@ -67,22 +74,33 @@ class SavingsScreenState extends State<SavingsScreen> {
         titleSpacing: 16,
         title: Row(
           children: [
-            // App Logo Icon
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F7F0),
+            // App Logo Icon (Wallet -> Home)
+            Tooltip(
+              message: 'Home',
+              child: Material(
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: const Color(0xFFCBEBD8),
-                  width: 1,
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: widget.onHomeTap,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F7F0),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFFCBEBD8),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Color(0xFF006C49),
+                      size: 20,
+                    ),
+                  ),
                 ),
-              ),
-              child: const Icon(
-                Icons.account_balance_wallet_rounded,
-                color: Color(0xFF006C49),
-                size: 20,
               ),
             ),
             const SizedBox(width: 12),
@@ -132,19 +150,31 @@ class SavingsScreenState extends State<SavingsScreen> {
           ),
           const SizedBox(width: 8),
 
-          // Profile Avatar
+          // Profile Avatar (Tap -> Profile)
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              radius: 19,
-              backgroundColor: const Color(0xFFD4EFE1),
-              child: const CircleAvatar(
-                radius: 17,
-                backgroundColor: Color(0xFFFFDED4),
-                child: Icon(
-                  Icons.person_rounded,
-                  size: 22,
-                  color: Color(0xFF8E4C3B),
+            child: Tooltip(
+              message: 'Profile',
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: widget.onProfileTap,
+                  child: CircleAvatar(
+                    radius: 19,
+                    backgroundColor: const Color(0xFFD4EFE1),
+                    child: const CircleAvatar(
+                      radius: 17,
+                      backgroundColor: Color(0xFFFFDED4),
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 22,
+                        color: Color(0xFF8E4C3B),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

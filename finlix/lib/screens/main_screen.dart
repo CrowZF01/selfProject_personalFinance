@@ -31,16 +31,49 @@ class _MainScreenState extends State<MainScreen> {
   GlobalKey<ProfileScreenState> get profileKey =>
       _profileKey ??= GlobalKey<ProfileScreenState>();
 
+  void _switchTab(int index) {
+    if (_currentIndex != index) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+    if (index == 0) {
+      dashboardKey.currentState?.loadData();
+    } else if (index == 1) {
+      analyticsKey.currentState?.loadData();
+    } else if (index == 2) {
+      savingsKey.currentState?.loadData();
+    } else if (index == 3) {
+      profileKey.currentState?.loadData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
       valueListenable: AppFormatters.currencyNotifier,
       builder: (context, _, _) {
         final screens = [
-          DashboardScreen(key: dashboardKey),
-          AnalyticsScreen(key: analyticsKey),
-          SavingsScreen(key: savingsKey),
-          ProfileScreen(key: profileKey),
+          DashboardScreen(
+            key: dashboardKey,
+            onHomeTap: () => _switchTab(0),
+            onProfileTap: () => _switchTab(3),
+          ),
+          AnalyticsScreen(
+            key: analyticsKey,
+            onHomeTap: () => _switchTab(0),
+            onProfileTap: () => _switchTab(3),
+          ),
+          SavingsScreen(
+            key: savingsKey,
+            onHomeTap: () => _switchTab(0),
+            onProfileTap: () => _switchTab(3),
+          ),
+          ProfileScreen(
+            key: profileKey,
+            onHomeTap: () => _switchTab(0),
+            onProfileTap: () => _switchTab(3),
+          ),
         ];
 
         return Scaffold(
@@ -51,20 +84,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-              if (index == 0) {
-                dashboardKey.currentState?.loadData();
-              } else if (index == 1) {
-                analyticsKey.currentState?.loadData();
-              } else if (index == 2) {
-                savingsKey.currentState?.loadData();
-              } else if (index == 3) {
-                profileKey.currentState?.loadData();
-              }
-            },
+            onTap: _switchTab,
             onAddTap: () async {
               final result = await Navigator.push<bool>(
                 context,
