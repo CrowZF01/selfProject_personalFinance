@@ -169,8 +169,24 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   TextField(
                     controller: controller,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
+                      decoration: InputDecoration(
+                      prefixIcon: AppFormatters.isIdr
+                          ? const Center(
+                              widthFactor: 1.0,
+                              heightFactor: 1.0,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 14, right: 6),
+                                child: Text(
+                                  'Rp',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.attach_money_rounded, color: AppColors.primary),
                       labelText: 'Nominal Batas Anggaran',
                       filled: true,
                       fillColor: const Color(0xFFFAF1E8),

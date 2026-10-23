@@ -1042,7 +1042,23 @@ class SavingsScreenState extends State<SavingsScreen> {
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       autofocus: true,
                       decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
+                      prefixIcon: AppFormatters.isIdr
+                          ? const Center(
+                              widthFactor: 1.0,
+                              heightFactor: 1.0,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 14, right: 6),
+                                child: Text(
+                                  'Rp',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.attach_money_rounded, color: AppColors.primary),
                         hintText: '0.00',
                         filled: true,
                         fillColor: const Color(0xFFFAF2EB),
