@@ -331,7 +331,7 @@ class SavingsScreenState extends State<SavingsScreen> {
               Text(
                 AppFormatters.isIdr
                     ? AppFormatters.formatCurrency(totalSaved)
-                    : '\$${_formatCompact(totalSaved)}',
+                    : '${_formatCompact(totalSaved)}',
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -533,7 +533,7 @@ class SavingsScreenState extends State<SavingsScreen> {
             ),
             const SizedBox(width: 4),
             Text(
-              'Target: \$${_formatCompact(totalTarget)}',
+              'Target: ${_formatCompact(totalTarget)}',
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
