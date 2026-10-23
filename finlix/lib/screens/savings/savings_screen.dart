@@ -1329,8 +1329,8 @@ class SavingsScreenState extends State<SavingsScreen> {
                             controller: targetController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             decoration: InputDecoration(
-                              labelText: 'Target Total (\$)',
-                              hintText: '500.00',
+                              labelText: AppFormatters.isIdr ? 'Target Total (Rp)' : 'Target Total (\$)',
+                              hintText: AppFormatters.isIdr ? '1000000' : '500.00',
                               filled: true,
                               fillColor: const Color(0xFFFAF2EB),
                               border: OutlineInputBorder(
@@ -1354,8 +1354,8 @@ class SavingsScreenState extends State<SavingsScreen> {
                             controller: initialController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             decoration: InputDecoration(
-                              labelText: 'Saldo Awal (\$)',
-                              hintText: '0.00',
+                              labelText: AppFormatters.isIdr ? 'Saldo Awal (Rp)' : 'Saldo Awal (\$)',
+                              hintText: AppFormatters.isIdr ? '0' : '0.00',
                               filled: true,
                               fillColor: const Color(0xFFFAF2EB),
                               border: OutlineInputBorder(
