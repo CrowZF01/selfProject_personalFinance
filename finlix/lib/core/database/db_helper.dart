@@ -226,7 +226,9 @@ class DbHelper {
       final parsed = double.tryParse(val);
       if (parsed != null && parsed > 0) return parsed;
     }
-    return 1500.0; // Default budget limit
+    final curr = await getSetting('currency') ?? 'IDR (Rp)';
+    final isIdr = curr.contains('IDR') || curr.contains('Rp');
+    return isIdr ? 5000000.0 : 1500.0;
   }
 
   Future<void> setMonthlyBudget(double budget) async {
@@ -237,7 +239,7 @@ class DbHelper {
     final name = await getSetting('user_name') ?? '';
     final handle = await getSetting('user_handle') ?? '';
     final email = await getSetting('user_email') ?? '';
-    final currency = await getSetting('currency') ?? 'USD (\$)';
+    final currency = await getSetting('currency') ?? 'IDR (Rp)';
     final salaryDay = await getSetting('salary_day') ?? '25';
     final biometric = await getSetting('biometric_enabled') ?? 'true';
     final budgetAlert = await getSetting('budget_alert_enabled') ?? 'true';

@@ -29,9 +29,9 @@ class ProfileScreenState extends State<ProfileScreen> {
   String _userName = '';
   String _userHandle = '';
   String _userEmail = '';
-  String _currency = 'USD (\$)';
+  String _currency = 'IDR (Rp)';
   int _salaryDay = 25;
-  double _monthlyBudget = 1500.0;
+  double _monthlyBudget = 5000000.0;
 
   // Toggle Preferences
   bool _isBiometricEnabled = true;
@@ -91,7 +91,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           _userName = profile['user_name'] ?? '';
           _userHandle = profile['user_handle'] ?? '';
           _userEmail = profile['user_email'] ?? '';
-          _currency = profile['currency'] ?? 'USD (\$)';
+          _currency = profile['currency'] ?? 'IDR (Rp)';
           _salaryDay = int.tryParse(profile['salary_day'] ?? '25') ?? 25;
           _isBiometricEnabled = profile['biometric_enabled'] != 'false';
           _isBudgetAlertEnabled = profile['budget_alert_enabled'] != 'false';
@@ -413,8 +413,8 @@ class ProfileScreenState extends State<ProfileScreen> {
   // --- Modal Pemilih Mata Uang Utama ---
   void _showCurrencyPicker() {
     final currencies = [
-      {'code': 'USD (\$)', 'desc': 'Dolar Amerika Serikat (Default)'},
-      {'code': 'IDR (Rp)', 'desc': 'Rupiah Indonesia'},
+      {'code': 'IDR (Rp)', 'desc': 'Rupiah Indonesia (Default)'},
+      {'code': 'USD (\$)', 'desc': 'Dolar Amerika Serikat'},
     ];
 
     showModalBottomSheet(
@@ -959,7 +959,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(ctx);
               await DbHelper.instance.resetAllData();
-              AppFormatters.setCurrency('USD (\$)');
+              AppFormatters.setCurrency('IDR (Rp)');
               await loadData();
               if (mounted) {
                 messenger.showSnackBar(

@@ -32,7 +32,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
   List<TransactionModel> _allTransactions = [];
   bool _isLoading = true;
   double? _monthlyBudget;
-  double get monthlyBudget => _monthlyBudget ?? 1500.0;
+  double get monthlyBudget =>
+      _monthlyBudget ?? (AppFormatters.isIdr ? 5000000.0 : 1500.0);
 
   int _selectedChartTab = 0; // 0 = Donut Chart, 1 = Weekly Bar Chart
   int _touchedPieIndex = -1;

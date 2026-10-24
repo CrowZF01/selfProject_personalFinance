@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 
 class AppFormatters {
-  static final ValueNotifier<String> currencyNotifier = ValueNotifier<String>('USD (\$)');
+  static final ValueNotifier<String> currencyNotifier = ValueNotifier<String>('IDR (Rp)');
 
   static String get currentCurrency => currencyNotifier.value;
 
@@ -18,8 +18,12 @@ class AppFormatters {
       final saved = await DbHelper.instance.getSetting('currency');
       if (saved != null && saved.isNotEmpty) {
         currencyNotifier.value = saved;
+      } else {
+        currencyNotifier.value = 'IDR (Rp)';
       }
-    } catch (_) {}
+    } catch (_) {
+      currencyNotifier.value = 'IDR (Rp)';
+    }
   }
 
   /// Set and update currency across the entire app.
