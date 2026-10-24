@@ -8,6 +8,8 @@ import 'transactions/add_transaction_screen.dart';
 
 import '../core/utils/formatters.dart';
 
+import '../core/services/notification_service.dart';
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -21,6 +23,12 @@ class _MainScreenState extends State<MainScreen> {
   GlobalKey<AnalyticsScreenState>? _analyticsKey;
   GlobalKey<SavingsScreenState>? _savingsKey;
   GlobalKey<ProfileScreenState>? _profileKey;
+
+  @override
+  void initState() {
+    super.initState();
+    NotificationService.instance.refreshUnreadCount();
+  }
 
   GlobalKey<DashboardScreenState> get dashboardKey =>
       _dashboardKey ??= GlobalKey<DashboardScreenState>();
@@ -58,21 +66,25 @@ class _MainScreenState extends State<MainScreen> {
             key: dashboardKey,
             onHomeTap: () => _switchTab(0),
             onProfileTap: () => _switchTab(3),
+            onNavigateTab: _switchTab,
           ),
           AnalyticsScreen(
             key: analyticsKey,
             onHomeTap: () => _switchTab(0),
             onProfileTap: () => _switchTab(3),
+            onNavigateTab: _switchTab,
           ),
           SavingsScreen(
             key: savingsKey,
             onHomeTap: () => _switchTab(0),
             onProfileTap: () => _switchTab(3),
+            onNavigateTab: _switchTab,
           ),
           ProfileScreen(
             key: profileKey,
             onHomeTap: () => _switchTab(0),
             onProfileTap: () => _switchTab(3),
+            onNavigateTab: _switchTab,
           ),
         ];
 
@@ -98,6 +110,7 @@ class _MainScreenState extends State<MainScreen> {
                 analyticsKey.currentState?.loadData();
                 savingsKey.currentState?.loadData();
                 profileKey.currentState?.loadData();
+                NotificationService.instance.refreshUnreadCount();
               }
             },
           ),

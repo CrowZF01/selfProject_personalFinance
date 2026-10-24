@@ -3,15 +3,19 @@ import '../../core/database/db_helper.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
+import '../../widgets/notification_bell_button.dart';
+import '../../core/services/notification_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onHomeTap;
   final VoidCallback? onProfileTap;
+  final void Function(int tabIndex)? onNavigateTab;
 
   const ProfileScreen({
     super.key,
     this.onHomeTap,
     this.onProfileTap,
+    this.onNavigateTab,
   });
 
   @override
@@ -79,6 +83,8 @@ class ProfileScreenState extends State<ProfileScreen> {
           score = ((1.0 - (ratio - 1.0)) * 50).toInt().clamp(10, 60);
         }
       }
+
+      NotificationService.instance.refreshUnreadCount();
 
       if (mounted) {
         setState(() {
@@ -1083,23 +1089,7 @@ class ProfileScreenState extends State<ProfileScreen> {
         ),
         actions: [
           // Notification Bell Button
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFECE5),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFF3D5C8),
-                width: 1,
-              ),
-            ),
-            child: const Icon(
-              Icons.notifications_none_rounded,
-              color: AppColors.onSurface,
-              size: 20,
-            ),
-          ),
+          NotificationBellButton(onNavigateTab: widget.onNavigateTab),
           const SizedBox(width: 8),
 
           // Profile Avatar (Tap -> Profile)
