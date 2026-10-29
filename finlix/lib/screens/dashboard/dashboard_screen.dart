@@ -31,6 +31,15 @@ class DashboardScreenState extends State<DashboardScreen> {
   DateTime? _selectedDate;
   bool? _isDaySpecific;
 
+  TextEditingController? _searchController;
+  TextEditingController get _effectiveSearchController =>
+      _searchController ??= TextEditingController();
+
+  TransactionType? _selectedTypeFilter;
+  String? _selectedCategoryId;
+  bool? _searchAllPeriod;
+  bool get _isSearchAllPeriod => _searchAllPeriod ?? false;
+
   DateTime get selectedDate => _selectedDate ?? DateTime.now();
   bool get isDaySpecific => _isDaySpecific ?? false;
 
@@ -39,7 +48,15 @@ class DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _selectedDate = DateTime.now();
     _isDaySpecific = false;
+    _searchController = TextEditingController();
+    _searchAllPeriod = false;
     loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchController?.dispose();
+    super.dispose();
   }
 
   Future<void> loadData() async {
@@ -67,8 +84,14 @@ class DashboardScreenState extends State<DashboardScreen> {
     final curDate = selectedDate;
     final daySpecific = isDaySpecific;
 
-    // Filter transaksi berdasarkan bulan/tahun atau tanggal spesifik
-    final filteredTransactions = _transactions.where((tx) {
+    final String query = _effectiveSearchController.text.trim().toLowerCase();
+    final bool isSearching = query.isNotEmpty;
+    final bool isFiltering = isSearching ||
+        _selectedTypeFilter != null ||
+        _selectedCategoryId != null;
+
+    // Ringkasan bulanan (overview saldo bulan terpilih)
+    final monthlyTransactions = _transactions.where((tx) {
       if (daySpecific) {
         return tx.date.year == curDate.year &&
             tx.date.month == curDate.month &&
@@ -81,7 +104,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
     double totalIncome = 0;
     double totalExpense = 0;
-    for (var tx in filteredTransactions) {
+    for (var tx in monthlyTransactions) {
       if (tx.type == TransactionType.income) {
         totalIncome += tx.amount;
       } else {
@@ -90,10 +113,52 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
     final double balance = totalIncome - totalExpense;
 
+    // Filter transaksi berdasarkan pencarian, tipe, kategori, dan periode
+    final filteredTransactions = _transactions.where((tx) {
+      // 1. Filter tanggal / periode (jika aktif mode cari semua periode saat mencari, lewati filter tanggal)
+      if (!(_isSearchAllPeriod && isSearching)) {
+        if (daySpecific) {
+          final matchDate = tx.date.year == curDate.year &&
+              tx.date.month == curDate.month &&
+              tx.date.day == curDate.day;
+          if (!matchDate) return false;
+        } else {
+          final matchMonth = tx.date.year == curDate.year &&
+              tx.date.month == curDate.month;
+          if (!matchMonth) return false;
+        }
+      }
+
+      // 2. Filter tipe transaksi
+      if (_selectedTypeFilter != null && tx.type != _selectedTypeFilter) {
+        return false;
+      }
+
+      // 3. Filter kategori
+      if (_selectedCategoryId != null && tx.categoryId != _selectedCategoryId) {
+        return false;
+      }
+
+      // 4. Pencarian kata kunci (nama transaksi, catatan, atau kategori)
+      if (isSearching) {
+        final cat = DefaultCategories.byId(tx.categoryId);
+        final titleMatch = tx.title.toLowerCase().contains(query);
+        final noteMatch = tx.note?.toLowerCase().contains(query) ?? false;
+        final catMatch = cat?.name.toLowerCase().contains(query) ?? false;
+        if (!titleMatch && !noteMatch && !catMatch) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
+
     // Group transactions by Date String (e.g. '16 Sept Wednesday')
     final Map<String, List<TransactionModel>> grouped = {};
     for (var tx in filteredTransactions) {
-      final dateKey = DateFormat('d MMM EEEE').format(tx.date);
+      final dateKey = (tx.date.year == DateTime.now().year)
+          ? DateFormat('d MMM EEEE').format(tx.date)
+          : DateFormat('d MMM yyyy EEEE').format(tx.date);
       if (!grouped.containsKey(dateKey)) {
         grouped[dateKey] = [];
       }
@@ -226,10 +291,14 @@ class DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 10),
                         _buildFilterActiveBanner(),
                       ],
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 16),
+
+                      // Search & Quick Filter Controls
+                      _buildSearchAndFilterSection(isFiltering, filteredTransactions.length),
+                      const SizedBox(height: 14),
 
                       if (filteredTransactions.isEmpty)
-                        _buildEmptyState()
+                        _buildEmptyState(isFiltering: isFiltering)
                       else
                         ...grouped.entries.map((entry) {
                           double groupExpense = 0;
@@ -339,13 +408,16 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState({required bool isFiltering}) {
     final curDate = selectedDate;
     final daySpecific = isDaySpecific;
     final String titleText;
     final String subtitleText;
 
-    if (_transactions.isEmpty) {
+    if (isFiltering) {
+      titleText = 'Tidak ada transaksi yang cocok';
+      subtitleText = 'Tidak ditemukan transaksi sesuai kata kunci atau kriteria filter yang Anda pilih.';
+    } else if (_transactions.isEmpty) {
       titleText = 'Belum ada transaksi';
       subtitleText = 'Tekan tombol + di bawah untuk mencatat pengeluaran atau pemasukan baru Anda.';
     } else if (daySpecific) {
@@ -361,7 +433,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
-      margin: const EdgeInsets.only(top: 20),
+      margin: const EdgeInsets.only(top: 14),
       decoration: BoxDecoration(
         color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(22),
@@ -374,14 +446,14 @@ class DashboardScreenState extends State<DashboardScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFDED4),
+            decoration: BoxDecoration(
+              color: isFiltering ? const Color(0xFFE8F7F0) : const Color(0xFFFFDED4),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.receipt_long_outlined,
+            child: Icon(
+              isFiltering ? Icons.search_off_rounded : Icons.receipt_long_outlined,
               size: 38,
-              color: Color(0xFF8E4C3B),
+              color: isFiltering ? AppColors.primary : const Color(0xFF8E4C3B),
             ),
           ),
           const SizedBox(height: 16),
@@ -404,7 +476,24 @@ class DashboardScreenState extends State<DashboardScreen> {
               height: 1.4,
             ),
           ),
-          if (_transactions.isNotEmpty &&
+          if (isFiltering) ...[
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                elevation: 0,
+              ),
+              onPressed: _resetAllFilters,
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              label: const Text(
+                'Reset Filter & Pencarian',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ),
+          ] else if (_transactions.isNotEmpty &&
               (daySpecific ||
                   curDate.month != DateTime.now().month ||
                   curDate.year != DateTime.now().year)) ...[
@@ -436,6 +525,492 @@ class DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     );
+  }
+
+  // --- Search & Filter Controls Widget ---
+  Widget _buildSearchAndFilterSection(bool isFiltering, int resultCount) {
+    final selectedCat = _selectedCategoryId != null
+        ? DefaultCategories.byId(_selectedCategoryId!)
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Search Bar
+        Container(
+          height: 46,
+          decoration: BoxDecoration(
+            color: AppColors.cardSurface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _effectiveSearchController.text.isNotEmpty
+                  ? AppColors.primary.withValues(alpha: 0.6)
+                  : AppColors.borderSubtle,
+              width: 1.1,
+            ),
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 12),
+              Icon(
+                Icons.search_rounded,
+                size: 20,
+                color: _effectiveSearchController.text.isNotEmpty ? AppColors.primary : AppColors.textMuted,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _effectiveSearchController,
+                  onChanged: (_) => setState(() {}),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: AppColors.onSurface,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Cari nama transaksi, catatan, atau kategori...',
+                    hintStyle: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+              if (_effectiveSearchController.text.isNotEmpty)
+                IconButton(
+                  icon: Icon(Icons.clear_rounded, size: 18, color: AppColors.textMuted),
+                  onPressed: () {
+                    _effectiveSearchController.clear();
+                    setState(() {});
+                  },
+                ),
+              const SizedBox(width: 4),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // 2. Horizontal Filter Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              // Type: Semua
+              _buildFilterChip(
+                label: 'Semua',
+                isSelected: _selectedTypeFilter == null,
+                onTap: () {
+                  setState(() => _selectedTypeFilter = null);
+                },
+              ),
+              const SizedBox(width: 8),
+
+              // Type: Pengeluaran
+              _buildFilterChip(
+                label: 'Pengeluaran',
+                icon: Icons.arrow_downward_rounded,
+                isSelected: _selectedTypeFilter == TransactionType.expense,
+                activeColor: AppColors.expense,
+                onTap: () {
+                  setState(() {
+                    _selectedTypeFilter = (_selectedTypeFilter == TransactionType.expense)
+                        ? null
+                        : TransactionType.expense;
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+
+              // Type: Pemasukan
+              _buildFilterChip(
+                label: 'Pemasukan',
+                icon: Icons.arrow_upward_rounded,
+                isSelected: _selectedTypeFilter == TransactionType.income,
+                activeColor: AppColors.income,
+                onTap: () {
+                  setState(() {
+                    _selectedTypeFilter = (_selectedTypeFilter == TransactionType.income)
+                        ? null
+                        : TransactionType.income;
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+
+              // Category Filter Button
+              _buildFilterChip(
+                label: selectedCat != null ? selectedCat.name : 'Kategori',
+                icon: selectedCat != null ? selectedCat.icon : Icons.tune_rounded,
+                isSelected: selectedCat != null,
+                activeColor: AppColors.primary,
+                trailing: selectedCat != null
+                    ? GestureDetector(
+                        onTap: () => setState(() => _selectedCategoryId = null),
+                        child: const Padding(
+                          padding: EdgeInsets.only(left: 4.0),
+                          child: Icon(Icons.close_rounded, size: 14),
+                        ),
+                      )
+                    : const Icon(Icons.arrow_drop_down_rounded, size: 18),
+                onTap: _showCategoryFilterModal,
+              ),
+
+              // Search All Period Toggle (hanya muncul saat mencari kata kunci)
+              if (_effectiveSearchController.text.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  label: _isSearchAllPeriod ? 'Semua Periode' : 'Bulan Ini',
+                  icon: Icons.date_range_rounded,
+                  isSelected: _isSearchAllPeriod,
+                  activeColor: AppColors.primary,
+                  onTap: () {
+                    setState(() => _searchAllPeriod = !_isSearchAllPeriod);
+                  },
+                ),
+              ],
+
+              // Reset All Filters Button
+              if (isFiltering) ...[
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: _resetAllFilters,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFECE5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFFD4DF)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.refresh_rounded, size: 14, color: Color(0xFFBD382B)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Reset',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFBD382B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // 3. Section Header: Title & Result Count Badge
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              isFiltering ? 'Hasil Pencarian' : 'Riwayat Transaksi',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+              ),
+            ),
+            if (isFiltering)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: AppColors.mintAccentBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$resultCount transaksi',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    IconData? icon,
+    required bool isSelected,
+    VoidCallback? onTap,
+    Color? activeColor,
+    Widget? trailing,
+  }) {
+    final effectiveColor = activeColor ?? AppColors.primary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6.5),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? effectiveColor.withValues(alpha: 0.14)
+                : AppColors.cardSurface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected ? effectiveColor : AppColors.borderSubtle,
+              width: isSelected ? 1.4 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isSelected ? effectiveColor : AppColors.textMuted,
+                ),
+                const SizedBox(width: 5),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  color: isSelected ? effectiveColor : AppColors.onSurface,
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCategoryFilterModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag Handle
+              Container(
+                width: 42,
+                height: 4.5,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCC8BB),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Pilih Kategori',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  if (_selectedCategoryId != null)
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _selectedCategoryId = null);
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(
+                        'Reset Filter',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF757575)),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Category List
+              Expanded(
+                child: ListView(
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    // All Categories Option
+                    _buildCategoryOptionTile(
+                      ctx: ctx,
+                      title: 'Semua Kategori',
+                      icon: Icons.grid_view_rounded,
+                      color: AppColors.primary,
+                      isSelected: _selectedCategoryId == null,
+                      onTap: () {
+                        setState(() => _selectedCategoryId = null);
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Section: Pengeluaran
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 8),
+                      child: Text(
+                        'KATEGORI PENGELUARAN',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ),
+                    ...DefaultCategories.expenseCategories.map((cat) {
+                      return _buildCategoryOptionTile(
+                        ctx: ctx,
+                        title: cat.name,
+                        icon: cat.icon,
+                        color: cat.color,
+                        isSelected: _selectedCategoryId == cat.id,
+                        onTap: () {
+                          setState(() => _selectedCategoryId = cat.id);
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    }),
+                    const SizedBox(height: 14),
+
+                    // Section: Pemasukan
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 8),
+                      child: Text(
+                        'KATEGORI PEMASUKAN',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ),
+                    ...DefaultCategories.incomeCategories.map((cat) {
+                      return _buildCategoryOptionTile(
+                        ctx: ctx,
+                        title: cat.name,
+                        icon: cat.icon,
+                        color: cat.color,
+                        isSelected: _selectedCategoryId == cat.id,
+                        onTap: () {
+                          setState(() => _selectedCategoryId = cat.id);
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryOptionTile({
+    required BuildContext ctx,
+    required String title,
+    required IconData icon,
+    required Color color,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: isSelected ? color.withValues(alpha: 0.12) : AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isSelected ? color : AppColors.borderSubtle,
+          width: isSelected ? 1.4 : 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.16),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 18, color: color),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  Icon(Icons.check_circle_rounded, size: 20, color: color),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _resetAllFilters() {
+    setState(() {
+      _effectiveSearchController.clear();
+      _selectedTypeFilter = null;
+      _selectedCategoryId = null;
+      _searchAllPeriod = false;
+    });
   }
 
   /// Membuka modal pemilih bulan & tahun atau kalender tanggal spesifik
