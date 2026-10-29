@@ -19,6 +19,26 @@ class TransactionModel {
     this.note,
   });
 
+  TransactionModel copyWith({
+    int? id,
+    String? title,
+    double? amount,
+    TransactionType? type,
+    String? categoryId,
+    DateTime? date,
+    String? note,
+  }) {
+    return TransactionModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      categoryId: categoryId ?? this.categoryId,
+      date: date ?? this.date,
+      note: note ?? this.note,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

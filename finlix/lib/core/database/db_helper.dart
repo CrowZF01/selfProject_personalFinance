@@ -95,6 +95,17 @@ class DbHelper {
     return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
+  // Update an existing transaction.
+  Future<int> updateTransaction(TransactionModel transaction) async {
+    final db = await instance.database;
+    return await db.update(
+      'transactions',
+      transaction.toMap(),
+      where: 'id = ?',
+      whereArgs: [transaction.id],
+    );
+  }
+
   // --- Savings Goals CRUD ---
   Future<int> insertSavingsGoal(SavingsGoalModel goal) async {
     final db = await instance.database;

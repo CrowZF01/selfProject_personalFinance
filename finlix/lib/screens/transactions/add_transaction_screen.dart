@@ -7,7 +7,12 @@ import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final TransactionModel? initialTransaction;
+
+  const AddTransactionScreen({
+    super.key,
+    this.initialTransaction,
+  });
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -25,8 +30,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime.now();
-    _amount = AppFormatters.isIdr ? '25000' : '18.50';
+    if (widget.initialTransaction != null) {
+      final tx = widget.initialTransaction!;
+      _isExpense = tx.type == TransactionType.expense;
+      _selectedDate = tx.date;
+      _note = (tx.note != null && tx.note!.isNotEmpty) ? tx.note! : tx.title;
+      if (AppFormatters.isIdr) {
+        _amount = tx.amount.round().toString();
+      } else {
+        _amount = (tx.amount % 1 == 0)
+            ? tx.amount.toInt().toString()
+            : tx.amount.toStringAsFixed(2);
+      }
+
+      final list = _isExpense
+          ? DefaultCategories.expenseCategories
+          : DefaultCategories.incomeCategories;
+      final idx = list.indexWhere((c) => c.id == tx.categoryId);
+      if (idx != -1) {
+        _selectedCategoryIndex = idx;
+      }
+    } else {
+      _selectedDate = DateTime.now();
+      _amount = AppFormatters.isIdr ? '25000' : '18.50';
+    }
   }
 
   String get _displayAmount {
@@ -231,25 +258,49 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       final selectedCat = _categories[_selectedCategoryIndex];
       final catId = selectedCat['id'] as String? ?? 'cat_unknown';
 
-      final tx = TransactionModel(
-        title: _note.isNotEmpty ? _note : (selectedCat['label'] as String? ?? 'Transaction'),
-        amount: parsedAmount,
-        type: _isExpense ? TransactionType.expense : TransactionType.income,
-        categoryId: catId,
-        date: selectedDate,
-        note: _note,
-      );
-
-      await DbHelper.instance.insertTransaction(tx);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Transaksi berhasil disimpan!'),
-            backgroundColor: Color(0xFF00583A),
-          ),
+      if (widget.initialTransaction != null) {
+        final tx = TransactionModel(
+          id: widget.initialTransaction!.id,
+          title: _note.isNotEmpty ? _note : (selectedCat['label'] as String? ?? 'Transaction'),
+          amount: parsedAmount,
+          type: _isExpense ? TransactionType.expense : TransactionType.income,
+          categoryId: catId,
+          date: selectedDate,
+          note: _note,
         );
-        Navigator.pop(context, true);
+
+        await DbHelper.instance.updateTransaction(tx);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Transaksi berhasil diperbarui!'),
+              backgroundColor: Color(0xFF00583A),
+            ),
+          );
+          Navigator.pop(context, true);
+        }
+      } else {
+        final tx = TransactionModel(
+          title: _note.isNotEmpty ? _note : (selectedCat['label'] as String? ?? 'Transaction'),
+          amount: parsedAmount,
+          type: _isExpense ? TransactionType.expense : TransactionType.income,
+          categoryId: catId,
+          date: selectedDate,
+          note: _note,
+        );
+
+        await DbHelper.instance.insertTransaction(tx);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Transaksi berhasil disimpan!'),
+              backgroundColor: Color(0xFF00583A),
+            ),
+          );
+          Navigator.pop(context, true);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -306,7 +357,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
         title: Text(
-          'Add Transaction',
+          widget.initialTransaction != null ? 'Edit Transaction' : 'Add Transaction',
           style: TextStyle(
             color: AppColors.onSurface,
             fontSize: 18,
@@ -849,16 +900,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   ),
                                 ),
                               ]
-                            : const [
-                                Icon(
+                            : [
+                                const Icon(
                                   Icons.check_rounded,
                                   color: Colors.white,
                                   size: 22,
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
-                                  'Save',
-                                  style: TextStyle(
+                                  widget.initialTransaction != null ? 'Update' : 'Save',
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,

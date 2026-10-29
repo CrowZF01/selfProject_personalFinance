@@ -7,6 +7,7 @@ import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
 import '../../widgets/notification_bell_button.dart';
 import '../../core/services/notification_service.dart';
+import '../transactions/add_transaction_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onHomeTap;
@@ -1005,64 +1006,341 @@ class DashboardScreenState extends State<DashboardScreen> {
         if (tx.id != null) {
           await DbHelper.instance.deleteTransaction(tx.id!);
           loadData();
+          NotificationService.instance.refreshUnreadCount();
         }
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 11.0),
-        child: Row(
-          children: [
-            // Circle Icon Badge
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: iconBgColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 14),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _showTransactionDetailModal(tx),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 11.0),
+            child: Row(
+              children: [
+                // Circle Icon Badge
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
 
-            // Title / Note
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                // Title / Note
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tx.title.isNotEmpty ? tx.title : (cat?.name ?? 'Transaction'),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                      if (tx.note != null && tx.note!.isNotEmpty && tx.note != tx.title)
+                        Text(
+                          tx.note!,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF8E9A92),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Amount
+                Text(
+                  formattedAmt,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isExpense ? AppColors.expense : AppColors.income,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTransactionDetailModal(TransactionModel tx) {
+    final cat = DefaultCategories.byId(tx.categoryId);
+    final icon = cat?.icon ?? Icons.category_rounded;
+    final iconColor = cat?.color ?? const Color(0xFF8E4C3B);
+    final iconBgColor = (cat != null)
+        ? cat.color.withValues(alpha: 0.18)
+        : const Color(0xFFFFDED4);
+    final bool isExpense = tx.type == TransactionType.expense;
+    final formattedAmt = (isExpense ? '-' : '+') + AppFormatters.formatCurrency(tx.amount);
+    final dateFormatted = DateFormat('EEEE, d MMMM yyyy • HH:mm').format(tx.date);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (bottomSheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag Handle
+              Container(
+                width: 42,
+                height: 4.5,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCC8BB),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Icon & Title & Type
+              Row(
                 children: [
-                  Text(
-                    tx.title.isNotEmpty ? tx.title : (cat?.name ?? 'Transaction'),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.onSurface,
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: iconBgColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: iconColor, size: 24),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tx.title.isNotEmpty ? tx.title : (cat?.name ?? 'Transaksi'),
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          cat?.name ?? 'Umum',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFF757575),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  if (tx.note != null && tx.note!.isNotEmpty && tx.note != tx.title)
-                    Text(
-                      tx.note!,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF8E9A92),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isExpense ? const Color(0xFFFFECE5) : const Color(0xFFE8F7F0),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isExpense ? 'Pengeluaran' : 'Pemasukan',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: isExpense ? AppColors.expense : AppColors.income,
                       ),
                     ),
+                  ),
                 ],
               ),
-            ),
+              const SizedBox(height: 16),
 
-            // Amount
-            Text(
-              formattedAmt,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: isExpense ? AppColors.expense : AppColors.income,
+              // Nominal Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
+                decoration: BoxDecoration(
+                  color: AppColors.cardSurface,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.borderSubtle),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'TOTAL NOMINAL',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      formattedAmt,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: isExpense ? AppColors.expense : AppColors.income,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.textMuted),
+                        const SizedBox(width: 6),
+                        Text(
+                          dateFormatted,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              if (tx.note != null && tx.note!.isNotEmpty && tx.note != tx.title) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardSurfaceAlt,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.notes_rounded, size: 16, color: AppColors.textMuted),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          tx.note!,
+                          style: TextStyle(fontSize: 12.5, color: AppColors.onSurface),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+
+              // Action Buttons: Edit & Delete
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(bottomSheetContext);
+                        final result = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddTransactionScreen(initialTransaction: tx),
+                          ),
+                        );
+                        if (result == true) {
+                          loadData();
+                          NotificationService.instance.refreshUnreadCount();
+                        }
+                      },
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text(
+                        'Edit Transaksi',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton.filledTonal(
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFECE5),
+                      foregroundColor: const Color(0xFFBD382B),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.all(13),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(bottomSheetContext);
+                      _confirmDeleteTransaction(tx);
+                    },
+                    icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                    tooltip: 'Hapus Transaksi',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteTransaction(TransactionModel tx) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Hapus Transaksi?'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus catatan transaksi "${tx.title}" sebesar ${AppFormatters.formatCurrency(tx.amount)}?',
+          style: const TextStyle(fontSize: 13),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal', style: TextStyle(color: Color(0xFF757575))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFBD382B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              if (tx.id != null) {
+                await DbHelper.instance.deleteTransaction(tx.id!);
+                loadData();
+                NotificationService.instance.refreshUnreadCount();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Transaksi berhasil dihapus'),
+                      backgroundColor: Color(0xFFBD382B),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

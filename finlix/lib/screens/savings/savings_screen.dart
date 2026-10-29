@@ -908,7 +908,26 @@ class SavingsScreenState extends State<SavingsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
+
+                  // Edit Button
+                  IconButton.filledTonal(
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xFFE8F7F0),
+                      foregroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.all(13),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(bottomSheetContext);
+                      _showCreateOrEditPotModal(existingGoal: goal);
+                    },
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    tooltip: 'Edit Pot',
+                  ),
+                  const SizedBox(width: 8),
 
                   // Delete Button
                   IconButton.filledTonal(
@@ -1171,11 +1190,33 @@ class SavingsScreenState extends State<SavingsScreen> {
 
   /// Modal Pembuatan Pot Tabungan Baru (New Pot)
   void _showCreatePotModal() {
-    final titleController = TextEditingController();
-    final targetController = TextEditingController();
-    final initialController = TextEditingController();
-    DateTime? selectedDate;
-    String selectedEmoji = '🎯';
+    _showCreateOrEditPotModal();
+  }
+
+  /// Modal Pembuatan atau Edit Pot Tabungan
+  void _showCreateOrEditPotModal({SavingsGoalModel? existingGoal}) {
+    final isEditing = existingGoal != null;
+    final titleController = TextEditingController(text: existingGoal?.title ?? '');
+    final targetController = TextEditingController(
+      text: existingGoal != null
+          ? (AppFormatters.isIdr
+              ? existingGoal.targetAmount.round().toString()
+              : (existingGoal.targetAmount % 1 == 0
+                  ? existingGoal.targetAmount.toInt().toString()
+                  : existingGoal.targetAmount.toStringAsFixed(2)))
+          : '',
+    );
+    final initialController = TextEditingController(
+      text: existingGoal != null
+          ? (AppFormatters.isIdr
+              ? existingGoal.currentAmount.round().toString()
+              : (existingGoal.currentAmount % 1 == 0
+                  ? existingGoal.currentAmount.toInt().toString()
+                  : existingGoal.currentAmount.toStringAsFixed(2)))
+          : '',
+    );
+    DateTime? selectedDate = existingGoal?.targetDate;
+    String selectedEmoji = existingGoal?.emoji ?? '🎯';
 
     final sampleEmojis = [
       '🎯', '🛡️', '🌸', '💻', '🎟️', '✈️', '🚗', '🏠', '🎓', '💍', '🎁', '💰', '👟', '🎮'
@@ -1220,7 +1261,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Create New Pot',
+                          isEditing ? 'Edit Target Pot' : 'Create New Pot',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -1343,7 +1384,9 @@ class SavingsScreenState extends State<SavingsScreen> {
                             controller: initialController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             decoration: InputDecoration(
-                              labelText: AppFormatters.isIdr ? 'Saldo Awal (Rp)' : 'Saldo Awal (\$)',
+                              labelText: isEditing
+                                  ? (AppFormatters.isIdr ? 'Saldo Terkumpul (Rp)' : 'Saldo Terkumpul (\$)')
+                                  : (AppFormatters.isIdr ? 'Saldo Awal (Rp)' : 'Saldo Awal (\$)'),
                               hintText: AppFormatters.isIdr ? '0' : '0.00',
                               filled: true,
                               fillColor: const Color(0xFFFAF2EB),
@@ -1370,10 +1413,13 @@ class SavingsScreenState extends State<SavingsScreen> {
                     InkWell(
                       onTap: () async {
                         final now = DateTime.now();
+                        final firstDate = (selectedDate != null && selectedDate!.isBefore(now))
+                            ? selectedDate!
+                            : now.subtract(const Duration(days: 365));
                         final picked = await showDatePicker(
                           context: context,
                           initialDate: selectedDate ?? now.add(const Duration(days: 90)),
-                          firstDate: now,
+                          firstDate: firstDate,
                           lastDate: DateTime(now.year + 10),
                         );
                         if (picked != null) {
@@ -1453,34 +1499,60 @@ class SavingsScreenState extends State<SavingsScreen> {
                             return;
                           }
 
-                          final newGoal = SavingsGoalModel(
-                            title: title,
-                            targetAmount: target,
-                            currentAmount: initial,
-                            emoji: selectedEmoji,
-                            targetDate: selectedDate,
-                          );
-
                           final messenger = ScaffoldMessenger.of(context);
-                          await DbHelper.instance.insertSavingsGoal(newGoal);
-                          await loadData();
 
-                          if (bottomSheetContext.mounted) {
-                            Navigator.pop(bottomSheetContext);
-                          }
-
-                          if (mounted) {
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content: Text('Pot "$title" berhasil dibuat!'),
-                                backgroundColor: const Color(0xFF006C49),
-                              ),
+                          if (isEditing) {
+                            final updatedGoal = existingGoal.copyWith(
+                              title: title,
+                              targetAmount: target,
+                              currentAmount: initial,
+                              emoji: selectedEmoji,
+                              targetDate: selectedDate,
                             );
+                            await DbHelper.instance.updateSavingsGoal(updatedGoal);
+                            await loadData();
+
+                            if (bottomSheetContext.mounted) {
+                              Navigator.pop(bottomSheetContext);
+                            }
+
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('Pot "$title" berhasil diperbarui!'),
+                                  backgroundColor: const Color(0xFF006C49),
+                                ),
+                              );
+                            }
+                          } else {
+                            final newGoal = SavingsGoalModel(
+                              title: title,
+                              targetAmount: target,
+                              currentAmount: initial,
+                              emoji: selectedEmoji,
+                              targetDate: selectedDate,
+                            );
+
+                            await DbHelper.instance.insertSavingsGoal(newGoal);
+                            await loadData();
+
+                            if (bottomSheetContext.mounted) {
+                              Navigator.pop(bottomSheetContext);
+                            }
+
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('Pot "$title" berhasil dibuat!'),
+                                  backgroundColor: const Color(0xFF006C49),
+                                ),
+                              );
+                            }
                           }
                         },
-                        child: const Text(
-                          'Simpan Target Pot',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                        child: Text(
+                          isEditing ? 'Simpan Perubahan' : 'Simpan Target Pot',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
