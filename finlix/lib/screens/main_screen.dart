@@ -6,8 +6,9 @@ import 'savings/savings_screen.dart';
 import 'profile/profile_screen.dart';
 import 'transactions/add_transaction_screen.dart';
 
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_theme.dart';
 import '../core/utils/formatters.dart';
-
 import '../core/services/notification_service.dart';
 
 class MainScreen extends StatefulWidget {
@@ -58,9 +59,12 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: AppFormatters.currencyNotifier,
-      builder: (context, _, _) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        AppFormatters.currencyNotifier,
+        AppTheme.themeNotifier,
+      ]),
+      builder: (context, _) {
         final screens = [
           DashboardScreen(
             key: dashboardKey,
@@ -89,6 +93,7 @@ class _MainScreenState extends State<MainScreen> {
         ];
 
         return Scaffold(
+          backgroundColor: AppColors.background,
           extendBody: true,
           body: IndexedStack(
             index: _currentIndex,

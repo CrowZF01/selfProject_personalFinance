@@ -87,9 +87,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   top: 20,
                   bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
                 ),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -110,7 +110,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Batas Anggaran Bulanan',
                         style: TextStyle(
                           fontSize: 18,
@@ -177,11 +177,11 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
                       prefixIcon: AppFormatters.isIdr
-                          ? const Center(
+                          ? Center(
                               widthFactor: 1.0,
                               heightFactor: 1.0,
                               child: Padding(
-                                padding: EdgeInsets.only(left: 14, right: 6),
+                                padding: const EdgeInsets.only(left: 14, right: 6),
                                 child: Text(
                                   'Rp',
                                   style: TextStyle(
@@ -192,17 +192,17 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                                 ),
                               ),
                             )
-                          : const Icon(Icons.attach_money_rounded, color: AppColors.primary),
+                          : Icon(Icons.attach_money_rounded, color: AppColors.primary),
                       labelText: 'Nominal Batas Anggaran',
                       filled: true,
                       fillColor: const Color(0xFFFAF1E8),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: AppColors.borderSubtle),
+                        borderSide: BorderSide(color: AppColors.borderSubtle),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+                        borderSide: BorderSide(color: AppColors.primary, width: 1.6),
                       ),
                     ),
                   ),
@@ -354,8 +354,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -413,7 +413,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
@@ -455,7 +455,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Category Breakdown',
                               style: TextStyle(
                                 fontSize: 16.5,
@@ -750,7 +750,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(height: 2),
                   Text(
                     AppFormatters.formatCurrency(activeSpent),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16.5,
                       fontWeight: FontWeight.w800,
                       color: AppColors.onSurface,
@@ -992,13 +992,13 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.trending_up_rounded, size: 14, color: AppColors.primary),
+                  Icon(Icons.trending_up_rounded, size: 14, color: AppColors.primary),
                   const SizedBox(width: 4),
                   Text(
                     maxVal > 0
                         ? 'Peak: Week ${peakWeekIndex + 1} (${AppFormatters.formatCurrency(maxVal)})'
                         : 'No expenses yet',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
@@ -1028,7 +1028,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF2EB),
+        color: AppColors.cardSurfaceAlt,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -1053,7 +1053,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   width: 1,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chevron_left_rounded,
                 color: AppColors.onSurface,
                 size: 20,
@@ -1080,14 +1080,14 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(width: 8),
                     Text(
                       monthLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(
+                    Icon(
                       Icons.keyboard_arrow_down_rounded,
                       size: 16,
                       color: AppColors.onSurface,
@@ -1113,7 +1113,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   width: 1,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.onSurface,
                 size: 20,
@@ -1154,9 +1154,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             final currentNow = DateTime.now();
 
             return Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               ),
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
               child: Column(
@@ -1177,7 +1177,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Pilih Bulan Analitik',
                         style: TextStyle(
                           fontSize: 18,
@@ -1219,7 +1219,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFAF2EB),
+                      color: AppColors.cardSurfaceAlt,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: const Color(0xFFE2CFC2),
@@ -1230,7 +1230,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.chevron_left_rounded, color: AppColors.onSurface),
+                          icon: Icon(Icons.chevron_left_rounded, color: AppColors.onSurface),
                           onPressed: () {
                             setModalState(() {
                               pickerYear--;
@@ -1239,14 +1239,14 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                         ),
                         Text(
                           '$pickerYear',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                             color: AppColors.onSurface,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.chevron_right_rounded, color: AppColors.onSurface),
+                          icon: Icon(Icons.chevron_right_rounded, color: AppColors.onSurface),
                           onPressed: () {
                             setModalState(() {
                               pickerYear++;
@@ -1329,7 +1329,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                                     margin: const EdgeInsets.only(top: 2),
                                     width: 4,
                                     height: 4,
-                                    decoration: const BoxDecoration(
+                                    decoration: BoxDecoration(
                                       color: AppColors.primary,
                                       shape: BoxShape.circle,
                                     ),
@@ -1377,7 +1377,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF2EB),
+        color: AppColors.cardSurfaceAlt,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -1462,7 +1462,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             children: [
               Text(
                 AppFormatters.formatCurrency(totalExpense),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   color: AppColors.onSurface,
@@ -1583,7 +1583,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'No Expenses This Month',
             style: TextStyle(
               fontSize: 16,
@@ -1620,7 +1620,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF1E8),
+        color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -1654,7 +1654,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
@@ -1679,7 +1679,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                 children: [
                   Text(
                     spent,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.onSurface,
@@ -1742,7 +1742,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF1E8),
+        color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -1782,7 +1782,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                   children: [
                     Text(
                       insightTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,

@@ -121,16 +121,16 @@ class DashboardScreenState extends State<DashboardScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F7F0),
+                      color: AppColors.mintAccentBg,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: const Color(0xFFCBEBD8),
+                        color: AppColors.mintAccentBorder,
                         width: 1,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.account_balance_wallet_rounded,
-                      color: Color(0xFF006C49),
+                      color: AppColors.primary,
                       size: 20,
                     ),
                   ),
@@ -141,8 +141,8 @@ class DashboardScreenState extends State<DashboardScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -182,14 +182,14 @@ class DashboardScreenState extends State<DashboardScreen> {
                   onTap: widget.onProfileTap,
                   child: CircleAvatar(
                     radius: 19,
-                    backgroundColor: const Color(0xFFD4EFE1),
-                    child: const CircleAvatar(
+                    backgroundColor: AppColors.mintAccentBg,
+                    child: CircleAvatar(
                       radius: 17,
-                      backgroundColor: Color(0xFFFFDED4),
+                      backgroundColor: AppColors.peachAccentBg,
                       child: Icon(
                         Icons.person_rounded,
                         size: 22,
-                        color: Color(0xFF8E4C3B),
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -200,7 +200,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             )
           : RefreshIndicator(
@@ -280,7 +280,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.calendar_today_rounded,
                 size: 15,
                 color: AppColors.primary,
@@ -288,7 +288,7 @@ class DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 8),
               Text(
                 'Filter: $dateStr',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
                   color: AppColors.primary,
@@ -312,7 +312,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                   color: const Color(0xFFCBEBD8),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
@@ -323,7 +323,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                       color: AppColors.primary,
                     ),
                   ),
-                  SizedBox(width: 2),
+                  const SizedBox(width: 2),
                   Icon(
                     Icons.close_rounded,
                     size: 13,
@@ -362,7 +362,7 @@ class DashboardScreenState extends State<DashboardScreen> {
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
       margin: const EdgeInsets.only(top: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF1E8),
+        color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -387,7 +387,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           Text(
             titleText,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.onSurface,
@@ -415,8 +415,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                   _isDaySpecific = false;
                 });
               },
-              icon: const Icon(Icons.restore_rounded, size: 16, color: AppColors.primary),
-              label: const Text(
+              icon: Icon(Icons.restore_rounded, size: 16, color: AppColors.primary),
+              label: Text(
                 'Kembali ke Bulan Sekarang',
                 style: TextStyle(
                   color: AppColors.primary,
@@ -424,7 +424,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFFE8F7F0),
+                backgroundColor: AppColors.mintAccentBg,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -468,9 +468,9 @@ class DashboardScreenState extends State<DashboardScreen> {
             final currentNow = DateTime.now();
 
             return Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               ),
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
               child: Column(
@@ -491,7 +491,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Pilih Periode',
                         style: TextStyle(
                           fontSize: 18,
@@ -543,7 +543,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.chevron_left_rounded, color: AppColors.onSurface),
+                          icon: Icon(Icons.chevron_left_rounded, color: AppColors.onSurface),
                           onPressed: () {
                             setModalState(() {
                               pickerYear--;
@@ -552,14 +552,14 @@ class DashboardScreenState extends State<DashboardScreen> {
                         ),
                         Text(
                           '$pickerYear',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                             color: AppColors.onSurface,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.chevron_right_rounded, color: AppColors.onSurface),
+                          icon: Icon(Icons.chevron_right_rounded, color: AppColors.onSurface),
                           onPressed: () {
                             setModalState(() {
                               pickerYear++;
@@ -642,7 +642,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                                     margin: const EdgeInsets.only(top: 2),
                                     width: 4,
                                     height: 4,
-                                    decoration: const BoxDecoration(
+                                    decoration: BoxDecoration(
                                       color: AppColors.primary,
                                       shape: BoxShape.circle,
                                     ),
@@ -677,7 +677,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                         builder: (pickerCtx, child) {
                           return Theme(
                             data: Theme.of(pickerCtx).copyWith(
-                              colorScheme: const ColorScheme.light(
+                              colorScheme: ColorScheme.light(
                                 primary: AppColors.primary,
                                 onPrimary: Colors.white,
                                 surface: AppColors.background,
@@ -695,7 +695,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                         });
                       }
                     },
-                    icon: const Icon(Icons.event_note_rounded, size: 18, color: AppColors.primary),
+                    icon: Icon(Icons.event_note_rounded, size: 18, color: AppColors.primary),
                     label: const Text(
                       'Pilih Tanggal Tertentu (Spesifik Hari)',
                       style: TextStyle(
@@ -728,7 +728,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF2EB),
+        color: AppColors.cardSurfaceAlt,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -863,7 +863,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     return Container(
       height: 26,
       width: 1,
-      color: const Color(0xFFEADBCE),
+      color: AppColors.divider,
     );
   }
 
@@ -904,7 +904,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                         ),
                         TextSpan(
                           text: expensesText,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: AppColors.onSurface,
@@ -927,7 +927,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                           ),
                           TextSpan(
                             text: incomeText,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                               color: AppColors.onSurface,
@@ -947,7 +947,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         // Group Card Container
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFFAF1E8),
+            color: AppColors.cardSurface,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: AppColors.borderSubtle,
@@ -962,7 +962,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   _buildTransactionTile(item),
                   if (!isLast)
-                    const Divider(
+                    Divider(
                       height: 1,
                       thickness: 1,
                       color: AppColors.divider,
@@ -1034,7 +1034,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Text(
                     tx.title.isNotEmpty ? tx.title : (cat?.name ?? 'Transaction'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.onSurface,

@@ -5,6 +5,7 @@ import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
 import '../../widgets/notification_bell_button.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/theme/app_theme.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onHomeTap;
@@ -30,6 +31,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   String _userHandle = '';
   String _userEmail = '';
   String _currency = 'IDR (Rp)';
+  String _selectedTheme = 'warm_peach';
   int _salaryDay = 25;
   double _monthlyBudget = 5000000.0;
 
@@ -92,6 +94,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           _userHandle = profile['user_handle'] ?? '';
           _userEmail = profile['user_email'] ?? '';
           _currency = profile['currency'] ?? 'IDR (Rp)';
+          _selectedTheme = AppTheme.themeNotifier.value;
           _salaryDay = int.tryParse(profile['salary_day'] ?? '25') ?? 25;
           _isBiometricEnabled = profile['biometric_enabled'] != 'false';
           _isBudgetAlertEnabled = profile['budget_alert_enabled'] != 'false';
@@ -120,9 +123,9 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
-          children: const [
+          children: [
             Icon(Icons.edit_note_rounded, color: AppColors.primary),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
               'Edit Profil Pengguna',
               style: TextStyle(
@@ -145,7 +148,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   fillColor: const Color(0xFFFAF1E8),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.borderSubtle),
+                    borderSide: BorderSide(color: AppColors.borderSubtle),
                   ),
                 ),
               ),
@@ -158,7 +161,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   fillColor: const Color(0xFFFAF1E8),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.borderSubtle),
+                    borderSide: BorderSide(color: AppColors.borderSubtle),
                   ),
                 ),
               ),
@@ -172,7 +175,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   fillColor: const Color(0xFFFAF1E8),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.borderSubtle),
+                    borderSide: BorderSide(color: AppColors.borderSubtle),
                   ),
                 ),
               ),
@@ -244,9 +247,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                   top: 20,
                   bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
                 ),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -267,7 +270,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Batas Anggaran Bulanan',
                         style: TextStyle(
                           fontSize: 18,
@@ -334,11 +337,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
                         prefixIcon: AppFormatters.isIdr
-                            ? const Center(
+                            ? Center(
                                 widthFactor: 1.0,
                                 heightFactor: 1.0,
                                 child: Padding(
-                                  padding: EdgeInsets.only(left: 14, right: 6),
+                                  padding: const EdgeInsets.only(left: 14, right: 6),
                                   child: Text(
                                     'Rp',
                                     style: TextStyle(
@@ -349,17 +352,17 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                               )
-                            : const Icon(Icons.attach_money_rounded, color: AppColors.primary),
+                            : Icon(Icons.attach_money_rounded, color: AppColors.primary),
                       labelText: 'Nominal Batas Anggaran',
                       filled: true,
                       fillColor: const Color(0xFFFAF1E8),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: AppColors.borderSubtle),
+                        borderSide: BorderSide(color: AppColors.borderSubtle),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+                        borderSide: BorderSide(color: AppColors.primary, width: 1.6),
                       ),
                     ),
                   ),
@@ -410,6 +413,167 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // --- Modal Pemilih Tema Tampilan ---
+  void _showThemePicker() {
+    final themes = [
+      {
+        'code': 'warm_peach',
+        'title': 'Warm Peach (Terang)',
+        'desc': 'Nuansa hangat krem & peach alami untuk kenyamanan mata (Bawaan)',
+        'color': const Color(0xFFFFB5A2),
+        'bg': const Color(0xFFFFF0E6),
+        'icon': Icons.light_mode_rounded,
+      },
+      {
+        'code': 'dark',
+        'title': 'Tema Gelap (Dark Mode)',
+        'desc': 'Nuansa gelap elegan yang hemat daya dan ramah di malam hari',
+        'color': const Color(0xFF38B281),
+        'bg': const Color(0xFF1E2421),
+        'icon': Icons.dark_mode_rounded,
+      },
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => SafeArea(
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD8C7BA),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Pilih Tema Tampilan',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.onSurface,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Sesuaikan nuansa visual antarmuka FinLix dengan kenyamanan pandangan Anda.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF757575)),
+              ),
+              const SizedBox(height: 18),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const ClampingScrollPhysics(),
+                  itemCount: themes.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final item = themes[index];
+                    final code = item['code'] as String;
+                    final title = item['title'] as String;
+                    final desc = item['desc'] as String;
+                    final color = item['color'] as Color;
+                    final bg = item['bg'] as Color;
+                    final icon = item['icon'] as IconData;
+                    final isSelected = _selectedTheme == code;
+
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          await AppTheme.setTheme(code);
+                          if (mounted) {
+                            setState(() {
+                              _selectedTheme = code;
+                            });
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('Tema $title aktif!'),
+                                duration: const Duration(seconds: 2),
+                                backgroundColor: const Color(0xFF006C49),
+                              ),
+                            );
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFFAF1E8) : const Color(0xFFFAF2EB),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFF006C49) : const Color(0xFFE2CFC2),
+                              width: isSelected ? 1.8 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: bg,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: color, width: 1.5),
+                                ),
+                                child: Icon(icon, size: 20, color: color),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                        color: isSelected ? const Color(0xFF006C49) : AppColors.onSurface,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      desc,
+                                      style: const TextStyle(fontSize: 12, color: Color(0xFF757575)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle_rounded, color: Color(0xFF006C49), size: 22),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // --- Modal Pemilih Mata Uang Utama ---
   void _showCurrencyPicker() {
     final currencies = [
@@ -427,9 +591,9 @@ class ProfileScreenState extends State<ProfileScreen> {
             maxHeight: MediaQuery.of(context).size.height * 0.75,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -446,7 +610,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
+              Text(
                 'Pilih Mata Uang Utama',
                 style: TextStyle(
                   fontSize: 18,
@@ -548,9 +712,9 @@ class ProfileScreenState extends State<ProfileScreen> {
             maxHeight: MediaQuery.of(context).size.height * 0.75,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -568,7 +732,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                const Text(
+                Text(
                   'Awal Periode / Tanggal Gajian',
                   style: TextStyle(
                     fontSize: 18,
@@ -640,10 +804,10 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
-          children: const [
+          children: [
             Icon(Icons.lock_outline_rounded, color: AppColors.primary),
-            SizedBox(width: 8),
-            Text(
+            const SizedBox(width: 8),
+            const Text(
               'Ganti PIN Keamanan',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
@@ -664,13 +828,13 @@ class ProfileScreenState extends State<ProfileScreen> {
               obscureText: true,
               maxLength: 6,
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.pin_rounded, color: AppColors.primary),
+                prefixIcon: Icon(Icons.pin_rounded, color: AppColors.primary),
                 labelText: 'PIN 6 Digit',
                 filled: true,
                 fillColor: const Color(0xFFFAF1E8),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: AppColors.borderSubtle),
+                  borderSide: BorderSide(color: AppColors.borderSubtle),
                 ),
               ),
             ),
@@ -720,9 +884,9 @@ class ProfileScreenState extends State<ProfileScreen> {
             maxHeight: MediaQuery.of(context).size.height * 0.85,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -741,9 +905,9 @@ class ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 18),
             Row(
-              children: const [
-                Icon(Icons.file_download_outlined, color: Color(0xFF006C49), size: 24),
-                SizedBox(width: 8),
+              children: [
+                const Icon(Icons.file_download_outlined, color: Color(0xFF006C49), size: 24),
+                const SizedBox(width: 8),
                 Text(
                   'Backup & Ekspor Data',
                   style: TextStyle(
@@ -837,9 +1001,9 @@ class ProfileScreenState extends State<ProfileScreen> {
       builder: (ctx) => Container(
         height: MediaQuery.of(ctx).size.height * 0.65,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -903,10 +1067,10 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
-          children: const [
+          children: [
             Icon(Icons.shield_outlined, color: AppColors.primary),
-            SizedBox(width: 8),
-            Text('Kebijakan Privasi', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+            const SizedBox(width: 8),
+            const Text('Kebijakan Privasi', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
           ],
         ),
         content: const Text(
@@ -960,6 +1124,8 @@ class ProfileScreenState extends State<ProfileScreen> {
               Navigator.pop(ctx);
               await DbHelper.instance.resetAllData();
               AppFormatters.setCurrency('IDR (Rp)');
+              await AppTheme.setTheme('warm_peach');
+              setState(() => _selectedTheme = 'warm_peach');
               await loadData();
               if (mounted) {
                 messenger.showSnackBar(
@@ -1045,16 +1211,16 @@ class ProfileScreenState extends State<ProfileScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F7F0),
+                      color: AppColors.mintAccentBg,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: const Color(0xFFCBEBD8),
+                        color: AppColors.mintAccentBorder,
                         width: 1,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.account_balance_wallet_rounded,
-                      color: Color(0xFF006C49),
+                      color: AppColors.primary,
                       size: 20,
                     ),
                   ),
@@ -1065,8 +1231,8 @@ class ProfileScreenState extends State<ProfileScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -1112,14 +1278,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                   },
                   child: CircleAvatar(
                     radius: 19,
-                    backgroundColor: const Color(0xFFD4EFE1),
-                    child: const CircleAvatar(
+                    backgroundColor: AppColors.mintAccentBg,
+                    child: CircleAvatar(
                       radius: 17,
-                      backgroundColor: Color(0xFFFFDED4),
+                      backgroundColor: AppColors.peachAccentBg,
                       child: Icon(
                         Icons.person_rounded,
                         size: 22,
-                        color: Color(0xFF8E4C3B),
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -1130,7 +1296,7 @@ class ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             )
           : RefreshIndicator(
@@ -1242,7 +1408,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Text(
                                 _currency,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.onSurface,
@@ -1265,7 +1431,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Tgl $_salaryDay Tiap\nBulan',
                                 textAlign: TextAlign.right,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.onSurface,
@@ -1298,41 +1464,45 @@ class ProfileScreenState extends State<ProfileScreen> {
                           icon: Icons.palette_outlined,
                           title: 'Tema Aplikasi',
                           subtitle: 'Nuansa visual antarmuka',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Tema Warm Peach aktif secara default untuk kenyamanan mata.'),
-                                backgroundColor: Color(0xFF006C49),
-                              ),
-                            );
-                          },
+                          onTap: _showThemePicker,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF0E6),
+                                  color: _selectedTheme == 'dark'
+                                      ? const Color(0xFF232B27)
+                                      : const Color(0xFFFFF0E6),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: const Color(0xFFF3D5C8), width: 1),
+                                  border: Border.all(
+                                    color: _selectedTheme == 'dark'
+                                        ? const Color(0xFF35403A)
+                                        : const Color(0xFFF3D5C8),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
                                     Container(
                                       width: 10,
                                       height: 10,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFFFB5A2),
+                                      decoration: BoxDecoration(
+                                        color: _selectedTheme == 'dark'
+                                            ? const Color(0xFF38B281)
+                                            : const Color(0xFFFFB5A2),
                                         shape: BoxShape.circle,
                                       ),
                                     ),
                                     const SizedBox(width: 6),
-                                    const Text(
-                                      'Warm\nPeach',
+                                    Text(
+                                      _selectedTheme == 'dark' ? 'Tema\nGelap' : 'Warm\nPeach',
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.onSurface,
+                                        color: _selectedTheme == 'dark'
+                                            ? const Color(0xFFF0F4F2)
+                                            : AppColors.onSurface,
                                         height: 1.1,
                                       ),
                                     ),
@@ -1418,7 +1588,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF2EB),
+        color: AppColors.cardSurfaceAlt,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -1474,7 +1644,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             _userName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16.5,
                               fontWeight: FontWeight.w800,
                               color: AppColors.onSurface,
@@ -1531,7 +1701,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     color: Color(0xFFFFECE5),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.edit_outlined,
                     color: AppColors.onSurface,
                     size: 18,
@@ -1583,10 +1753,10 @@ class ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF1E8),
+        color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFF0DDD0),
+          color: AppColors.borderSubtle,
           width: 1,
         ),
       ),
@@ -1618,7 +1788,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF2EB),
+        color: AppColors.cardSurfaceAlt,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -1644,7 +1814,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'FinLix Plus Aktif',
                   style: TextStyle(
@@ -1653,8 +1823,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                     color: AppColors.onSurface,
                   ),
                 ),
-                SizedBox(height: 2),
-                Text(
+                const SizedBox(height: 2),
+                const Text(
                   'Auto-kategorisasi & database offline SQLite',
                   style: TextStyle(
                     fontSize: 11,
@@ -1689,7 +1859,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   Widget _buildGroupCard(List<Widget> items) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF1E8),
+        color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppColors.borderSubtle,
@@ -1703,7 +1873,7 @@ class ProfileScreenState extends State<ProfileScreen> {
             children: [
               items[index],
               if (!isLast)
-                const Divider(
+                Divider(
                   height: 1,
                   thickness: 1,
                   color: AppColors.divider,
@@ -1737,12 +1907,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3E6DA),
+                  color: AppColors.chipSurface,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   icon,
-                  color: const Color(0xFF6E7A72),
+                  color: AppColors.onSurfaceVariant,
                   size: 20,
                 ),
               ),
@@ -1753,7 +1923,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
@@ -1762,9 +1932,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF757575),
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ],
@@ -1793,12 +1963,12 @@ class ProfileScreenState extends State<ProfileScreen> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFFF3E6DA),
+              color: AppColors.chipSurface,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF6E7A72),
+              color: AppColors.onSurfaceVariant,
               size: 20,
             ),
           ),
@@ -1809,7 +1979,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -1818,9 +1988,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: Color(0xFF757575),
+                    color: AppColors.textMuted,
                   ),
                 ),
               ],
@@ -1970,7 +2140,7 @@ class _FaqTile extends StatelessWidget {
         children: [
           Text(
             question,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppColors.onSurface,

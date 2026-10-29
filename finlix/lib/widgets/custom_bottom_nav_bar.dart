@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_colors.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -20,15 +21,15 @@ class CustomBottomNavBar extends StatelessWidget {
         child: Container(
           height: 68,
           decoration: BoxDecoration(
-            color: const Color(0xFFFBF4EE),
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(40),
             border: Border.all(
-              color: const Color(0xFFEEDFD4),
+              color: AppColors.borderSubtle,
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
+                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.35 : 0.06),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -74,8 +75,8 @@ class CustomBottomNavBar extends StatelessWidget {
     IconData? selectedIcon,
   }) {
     final bool isSelected = currentIndex == index;
-    final Color activeColor = const Color(0xFF00583A);
-    final Color inactiveColor = const Color(0xFF757575);
+    final Color activeColor = AppColors.primary;
+    final Color inactiveColor = AppColors.outline;
 
     return Expanded(
       child: InkWell(
@@ -92,7 +93,7 @@ class CustomBottomNavBar extends StatelessWidget {
               curve: Curves.easeInOut,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFD4EFE1) : Colors.transparent,
+                color: isSelected ? AppColors.mintAccentBg : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
@@ -108,7 +109,6 @@ class CustomBottomNavBar extends StatelessWidget {
                 color: isSelected ? activeColor : inactiveColor,
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                letterSpacing: 0.1,
               ),
             ),
           ],
@@ -118,26 +118,32 @@ class CustomBottomNavBar extends StatelessWidget {
   }
 
   Widget _buildAddButton() {
-    return GestureDetector(
-      onTap: onAddTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: const Color(0xFF00583A),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF00583A).withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onAddTap,
+          customBorder: const CircleBorder(),
+          child: const Center(
+            child: Icon(
+              Icons.add_rounded,
+              color: Colors.white,
+              size: 28,
             ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add_rounded,
-          color: Colors.white,
-          size: 28,
+          ),
         ),
       ),
     );

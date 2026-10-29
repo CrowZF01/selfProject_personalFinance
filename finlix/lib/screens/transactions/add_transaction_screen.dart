@@ -126,11 +126,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             fillColor: const Color(0xFFFAF1E8),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.borderSubtle),
+              borderSide: BorderSide(color: AppColors.borderSubtle),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),
@@ -184,7 +184,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       builder: (pickerCtx, child) {
         return Theme(
           data: Theme.of(pickerCtx).copyWith(
-            colorScheme: const ColorScheme.light(
+            colorScheme: ColorScheme.light(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: AppColors.background,
@@ -296,7 +296,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   width: 1,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chevron_left_rounded,
                 color: AppColors.onSurface,
                 size: 22,
@@ -305,7 +305,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        title: const Text(
+        title: Text(
           'Add Transaction',
           style: TextStyle(
             color: AppColors.onSurface,
@@ -615,7 +615,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
               Text(
                 _displayAmount,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
                   color: AppColors.onSurface,
@@ -660,7 +660,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   Expanded(
                     child: Text(
                       _note,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                         color: AppColors.onSurface,

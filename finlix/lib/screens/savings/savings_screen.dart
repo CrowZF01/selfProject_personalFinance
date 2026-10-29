@@ -112,8 +112,8 @@ class SavingsScreenState extends State<SavingsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   'FINLIX',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -171,7 +171,7 @@ class SavingsScreenState extends State<SavingsScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
@@ -321,7 +321,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                 AppFormatters.isIdr
                     ? AppFormatters.formatCurrency(totalSaved)
                     : _formatCompact(totalSaved),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.onSurface,
@@ -358,7 +358,7 @@ class SavingsScreenState extends State<SavingsScreen> {
               value: overallProgress,
               minHeight: 7,
               backgroundColor: const Color(0xFFEDE0D4),
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
           const SizedBox(height: 8),
@@ -425,7 +425,7 @@ class SavingsScreenState extends State<SavingsScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Round to Emergency Fund',
                   style: TextStyle(
@@ -434,8 +434,8 @@ class SavingsScreenState extends State<SavingsScreen> {
                     color: AppColors.onSurface,
                   ),
                 ),
-                SizedBox(height: 2),
-                Text(
+                const SizedBox(height: 2),
+                const Text(
                   'Spare change auto-saved on every purchase',
                   style: TextStyle(
                     fontSize: 11,
@@ -494,7 +494,7 @@ class SavingsScreenState extends State<SavingsScreen> {
         RichText(
           text: TextSpan(
             children: [
-              const TextSpan(
+              TextSpan(
                 text: 'Your Savings Pots ',
                 style: TextStyle(
                   fontSize: 15.5,
@@ -565,7 +565,7 @@ class SavingsScreenState extends State<SavingsScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'No Savings Pots Yet',
             style: TextStyle(
               fontSize: 16,
@@ -725,7 +725,7 @@ class SavingsScreenState extends State<SavingsScreen> {
             // Pot Title
             Text(
               goal.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
@@ -742,7 +742,7 @@ class SavingsScreenState extends State<SavingsScreen> {
               children: [
                 Text(
                   AppFormatters.formatCompact(goal.currentAmount),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -819,9 +819,9 @@ class SavingsScreenState extends State<SavingsScreen> {
       isScrollControlled: true,
       builder: (bottomSheetContext) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
           child: Column(
@@ -861,7 +861,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                       children: [
                         Text(
                           goal.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                             color: AppColors.onSurface,
@@ -955,9 +955,9 @@ class SavingsScreenState extends State<SavingsScreen> {
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 ),
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
                 child: Column(
@@ -979,7 +979,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                       children: [
                         Text(
                           'Top-Up: ${goal.title}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 17.5,
                             fontWeight: FontWeight.w700,
                             color: AppColors.onSurface,
@@ -1006,7 +1006,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                         return ActionChip(
                           label: Text(
                             '+${AppFormatters.formatCompact(amt)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                               color: AppColors.primary,
@@ -1032,11 +1032,11 @@ class SavingsScreenState extends State<SavingsScreen> {
                       autofocus: true,
                       decoration: InputDecoration(
                       prefixIcon: AppFormatters.isIdr
-                          ? const Center(
+                          ? Center(
                               widthFactor: 1.0,
                               heightFactor: 1.0,
                               child: Padding(
-                                padding: EdgeInsets.only(left: 14, right: 6),
+                                padding: const EdgeInsets.only(left: 14, right: 6),
                                 child: Text(
                                   'Rp',
                                   style: TextStyle(
@@ -1047,7 +1047,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                                 ),
                               ),
                             )
-                          : const Icon(Icons.attach_money_rounded, color: AppColors.primary),
+                          : Icon(Icons.attach_money_rounded, color: AppColors.primary),
                         hintText: '0.00',
                         filled: true,
                         fillColor: const Color(0xFFFAF2EB),
@@ -1061,7 +1061,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                         ),
                       ),
                     ),
@@ -1132,7 +1132,7 @@ class SavingsScreenState extends State<SavingsScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Hapus ${goal.title}?',
-            style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.onSurface),
+            style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.onSurface),
           ),
           content: Text(
             'Apakah Anda yakin ingin menghapus pot tabungan "${goal.title}"? Tindakan ini tidak dapat dibatalkan.',
@@ -1193,9 +1193,9 @@ class SavingsScreenState extends State<SavingsScreen> {
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 ),
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
                 child: Column(
@@ -1219,7 +1219,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Create New Pot',
                           style: TextStyle(
                             fontSize: 18,
@@ -1304,7 +1304,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                         ),
                       ),
                     ),
@@ -1332,7 +1332,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                               ),
                             ),
                           ),
@@ -1357,7 +1357,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                               ),
                             ),
                           ),
@@ -1392,7 +1392,7 @@ class SavingsScreenState extends State<SavingsScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.event_outlined, size: 18, color: AppColors.primary),
+                            Icon(Icons.event_outlined, size: 18, color: AppColors.primary),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(

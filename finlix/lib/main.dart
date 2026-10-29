@@ -19,6 +19,7 @@ void main() async {
   }
 
   await AppFormatters.init();
+  await AppTheme.init();
 
   runApp(const FinlixApp());
 }
@@ -28,11 +29,19 @@ class FinlixApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FinLix',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const MainScreen(),
+    return ValueListenableBuilder<String>(
+      valueListenable: AppTheme.themeNotifier,
+      builder: (context, themeName, _) {
+        final isDark = themeName == 'dark';
+        return MaterialApp(
+          title: 'FinLix',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+          home: const MainScreen(),
+        );
+      },
     );
   }
 }

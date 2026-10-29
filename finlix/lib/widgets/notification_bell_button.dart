@@ -33,14 +33,14 @@ class NotificationBellButton extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFECE5),
+                      color: AppColors.peachAccentBg,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFF3D5C8),
+                        color: AppColors.peachAccentBorder,
                         width: 1,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.notifications_none_rounded,
                       color: AppColors.onSurface,
                       size: 20,

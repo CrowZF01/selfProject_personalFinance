@@ -80,9 +80,9 @@ class _NotificationBottomSheetContentState
         _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Semua notifikasi telah ditandai dibaca'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: const Text('Semua notifikasi telah ditandai dibaca'),
+          duration: const Duration(seconds: 2),
           backgroundColor: AppColors.primary,
         ),
       );
@@ -99,7 +99,7 @@ class _NotificationBottomSheetContentState
           'Bersihkan Notifikasi?',
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
         ),
-        content: const Text(
+        content: Text(
           'Semua daftar notifikasi dan wawasan saat ini akan dihapus dari riwayat.',
           style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
         ),
@@ -138,9 +138,9 @@ class _NotificationBottomSheetContentState
 
     return Container(
       constraints: BoxConstraints(maxHeight: maxSheetHeight),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         child: Column(
@@ -170,7 +170,7 @@ class _NotificationBottomSheetContentState
                   Expanded(
                     child: Row(
                       children: [
-                        const Text(
+                        Text(
                           'Pusat Notifikasi',
                           style: TextStyle(
                             fontSize: 19,
@@ -196,7 +196,7 @@ class _NotificationBottomSheetContentState
                             ),
                             child: Text(
                               '$_unreadCount Baru',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.expense,
@@ -212,7 +212,7 @@ class _NotificationBottomSheetContentState
                   if (_unreadCount > 0)
                     IconButton(
                       tooltip: 'Tandai Semua Dibaca',
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.done_all_rounded,
                         size: 20,
                         color: AppColors.primary,
@@ -297,12 +297,12 @@ class _NotificationBottomSheetContentState
             ),
 
             const SizedBox(height: 14),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: AppColors.divider),
 
             // Content List
             Expanded(
               child: _isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
                         color: AppColors.primary,
                         strokeWidth: 2.5,
@@ -340,14 +340,14 @@ class _NotificationBottomSheetContentState
                 color: Color(0xFFD4EFE1), // Pastel mint
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.verified_outlined,
                 color: AppColors.primary,
                 size: 38,
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Semua Beres! 🎉',
               style: TextStyle(
                 fontSize: 17,
@@ -361,7 +361,7 @@ class _NotificationBottomSheetContentState
                   ? 'Tidak ada peringatan atau pengingat aktif saat ini. Keuangan Anda aman dan terkendali.'
                   : 'Tidak ada notifikasi dalam kategori "$_selectedCategory".',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 color: AppColors.onSurfaceVariant,
                 height: 1.4,
@@ -394,12 +394,14 @@ class _NotificationBottomSheetContentState
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: isUnread ? const Color(0xFFFFFDFC) : const Color(0xFFFAF2EB),
+            color: isUnread
+                ? (AppColors.isDark ? const Color(0xFF222B26) : const Color(0xFFFFFDFC))
+                : AppColors.cardSurfaceAlt,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isUnread
                   ? item.iconColor.withValues(alpha: 0.35)
-                  : const Color(0xFFEADBCE),
+                  : AppColors.borderSubtle,
               width: isUnread ? 1.4 : 1,
             ),
             boxShadow: isUnread
@@ -471,7 +473,7 @@ class _NotificationBottomSheetContentState
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.expense,
                         shape: BoxShape.circle,
                       ),
@@ -498,7 +500,7 @@ class _NotificationBottomSheetContentState
               // Message
               Text(
                 item.message,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   color: AppColors.onSurfaceVariant,
